@@ -18,7 +18,7 @@ This set of scripts starts adb monkey in android device shell while locking your
 4. Monkey will furiously tap screen and try to crash your app
 5. If monkey crashed your app, crash log is saved to desktop
 
-Example: "adb_test 5000" - will start test with 5000 events, if app crash, log will be on desktop
+Example: `adb_test 5000` - will start test with 5000 events, if app crash, log will be on desktop
 
 #####adb_testloop - run multiple tests in a row
 1. Turn on the device, connect it to computer and open app for testing
@@ -31,7 +31,7 @@ Example: "adb_test 5000" - will start test with 5000 events, if app crash, log w
 5. Monkey will furiously tap screen and try to crash your app
 6. You see results of all tests, if monkey crashed your app, crash log is saved to desktop
 
-Example: "adb_testloop 10 5000" - will start 10 consecutive tests each with 5000 events and random seed, if app crash, logs will be on desktop
+Example: `adb_testloop 10 5000` - will start 10 consecutive tests each with 5000 events and random seed, if app crash, logs will be on desktop
 
 #####adb_killmonkey - stop Monkey Madness
 1. Use adb_killmonkey
