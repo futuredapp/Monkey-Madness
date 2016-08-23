@@ -11,7 +11,7 @@ This set of scripts starts adb monkey in android device shell while locking your
 ##How to use
 #####adb_test - run test
 1. Turn on the device, connect it to computer and open app for testing
-2. Start adb_test using terminal, you can specify optional arguments 
+2. Start `adb_test` using terminal, you can specify optional arguments 
   - argument1 - number of input events (touch, scroll, swipe...) that monkey will attempt to perform
   - argument2 - seed for generating random events (could be useful to repeat test which failed)
 3. Script will lock app to full screen to prevent monkey escape
@@ -22,7 +22,7 @@ Example: `adb_test 5000` - will start test with 5000 events, if app crash, log w
 
 #####adb_testloop - run multiple tests in a row
 1. Turn on the device, connect it to computer and open app for testing
-2. Start adb_testloop using terminal, you can specify optional arguments 
+2. Start `adb_testloop` using terminal, you can specify optional arguments 
   - argument1 - number of tests to perform 
   - argument2 - number of input events (touch, scroll, swipe...) that monkey will attempt to perform in each test
   - seeds will be random
