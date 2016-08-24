@@ -1,7 +1,7 @@
-# Monkey Madness - stress testing android apps
+# Monkey Madness - stress testing Android apps
 
 ##How it works
-This set of scripts starts adb monkey in android device shell while locking your app to fullscreen to prevent unwanted results, monkey does random events generated from seed, so you can repeat same test again if you want. When your app crashes, log with all necessary information (seed, number of events, logcat from device...) is saved to desktop in folder with your app's package name.
+This set of scripts starts ADB monkey in Android device shell while locking your app to fullscreen to prevent unwanted results, monkey does random events generated from seed, so you can repeat same test again if you want. When your app crashes, log with all necessary information (seed, number of events, logcat from device...) is saved to desktop in folder with your app's package name.
 
 ##Requirements
 1. Linux or macOS with Android Debug Bridge installed
@@ -34,10 +34,31 @@ Example: `adb_test 5000` - will start test with 5000 events, if app crash, log w
 Example: `adb_testloop 10 5000` - will start 10 consecutive tests each with 5000 events and random seed, if app crash, logs will be on desktop
 
 #####adb_killmonkey - stop Monkey Madness
-1. Use adb_killmonkey
+1. Use `adb_killmonkey`
 2. Monkey is dead - log from test is saved to desktop
  
 ##Warning
-- Monkey won't stop if you disconnect usb or kill script, you need to use adb_killmonkey in order to stop it.
+- Monkey won't stop if you disconnect USB or kill script, you need to use `adb_killmonkey` in order to stop it.
 - Keep in mind that monkey is unpredictable, it can send emails, delete files or worse if you let it (if it's possible inside your app). Always use debug versions of your apps to prevent dangerous actions.
 
+    MIT License
+
+    Copyright (c) 2016 eidamsvoboda
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    urnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
