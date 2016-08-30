@@ -6,17 +6,28 @@ echo
 echo "Android APP stress test "$ver
 echo "---------------------------"
 
+#check if display is on
+if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); then
+   echo -n "Turn screen on to continue..."
+fi
+while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); do 
+   sleep 1; 
+done
+
+echo
+
 #get app package name
 app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev)
-echo "Package name: "$app
+echo "Foreground app package name: "$app
 
-#check if display is on with suitable app
-if ! ([[ $app == *"com"* ]] || [[ $app == *"cz"* ]]) ; then
-   echo "No suitable app in foreground!";
-   echo "Unlock your phone and open APP you want to test.";
+#check if launcher
+if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"launcher"* ]]); then
+   echo -n "App appears to be launcher, are you sure you want to continue? ";
+   read force;
+   if [[ $force == *"n"* ]]; then
    echo "Aborting...";
-   echo
-   exit
+   exit;
+   fi
 fi
 
 #make folder if it doesnt exist
