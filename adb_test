@@ -1,14 +1,14 @@
 #!/bin/bash
 
 #nice intro
-ver="1.5"
+ver="1.6"
 echo
 echo "Android APP stress test "$ver
 echo "---------------------------"
 
 #check if display is on
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); then
-   echo -n "Turn screen on to continue..."
+   echo -n "Turn screen on and unlock device to continue..."
 fi
 while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); do 
    sleep 1; 
