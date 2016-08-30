@@ -1,9 +1,8 @@
 #!/bin/bash
 
 #nice intro
-ver="1.4";
-echo;
-echo "Stress test loop "$ver;
+echo
+echo "Monkey Madness - stress test loop";
 echo "---------------------------";
 
 #check if display is on

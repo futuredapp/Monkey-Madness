@@ -1,10 +1,9 @@
 #!/bin/bash
 
 #nice intro
-ver="1.6"
 echo
-echo "Android APP stress test "$ver
-echo "---------------------------"
+echo "Monkey Madness - stress test";
+echo "---------------------------";
 
 #check if display is on
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); then
