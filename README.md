@@ -16,9 +16,9 @@ This set of scripts starts ADB monkey in Android device shell while locking your
   - argument2 - seed for generating random events (could be useful to repeat test which failed)
 3. Script will lock app to full screen to prevent monkey escape
 4. Monkey will furiously tap screen and try to crash your app
-5. If monkey crashed your app, crash log is saved to desktop
+5. If monkey crashed your app, crash log is saved to desktop in folder with your app's package name
 
-Example: `adb_test 5000` - will start test with 5000 events, if app crash, log will be on desktop
+Example: `adb_test 5000` - will start test with 5000 events, if app crash, log will be saved to desktop in folder with your app's package name.
 
 #####adb_testloop - run multiple tests in a row
 1. Turn on the device, connect it to computer and open app for testing
@@ -29,13 +29,13 @@ Example: `adb_test 5000` - will start test with 5000 events, if app crash, log w
 3. Your app will now be restarted
 4. Script will lock app to full screen to prevent monkey escape
 5. Monkey will furiously tap screen and try to crash your app
-6. You see results of all tests, if monkey crashed your app, crash log is saved to desktop
+6. You see results of all tests, if monkey crashed your app, crash log is saved to desktop in folder with your app's package name.
 
-Example: `adb_testloop 10 5000` - will start 10 consecutive tests each with 5000 events and random seed, if app crash, logs will be on desktop
+Example: `adb_testloop 10 5000` - will start 10 consecutive tests each with 5000 events and random seed, if app crash, logs will be saved to desktop in folder with your app's package name.
 
 #####adb_killmonkey - stop Monkey Madness
 1. Use `adb_killmonkey`
-2. Monkey is dead - log from test is saved to desktop
+2. Monkey is dead - log from interrupted test is saved to desktop in folder with your app's package name
  
 ##Warning
 - Monkey won't stop if you disconnect USB or kill script, you need to use `adb_killmonkey` in order to stop it.
