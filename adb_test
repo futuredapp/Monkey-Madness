@@ -37,7 +37,7 @@ fi
 #check/set number input events
 events=0
 if [ -z "$1" ] || (( $1<1 )); then
-   while [ -z "$events" ] || [ $events -le 0 ]  ; do
+   until [[ $events =~ ^-?[0-9]+$ ]] && [ $events -gt 0 ]; do
       echo -n "Please specify number of input events: ";
       read events;
    done

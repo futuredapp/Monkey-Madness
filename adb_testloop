@@ -31,8 +31,8 @@ fi
 
 #check/set number of loops
 loops=0
-if [ -z "$1" ] || (( $1<1 )); then
-   while [ -z "$loops" ] || [ $loops -le 0 ]  ; do
+if [ -z "$1" ] || (( $1<1 )) ; then
+   until [[ $loops =~ ^-?[0-9]+$ ]] && [ $loops -gt 0 ]; do
       echo -n "Please specify number of tests: ";
       read loops;
    done
@@ -44,7 +44,7 @@ fi
 #check/set number input events
 events=0
 if [ -z "$2" ] || (( $2<1 )); then
-   while [ -z "$events" ] || [ $events -le 0 ]  ; do
+   until [[ $events =~ ^-?[0-9]+$ ]] && [ $events -gt 0 ]; do
       echo -n "Please specify number of input events: ";
       read events;
    done
