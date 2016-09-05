@@ -5,29 +5,48 @@ echo
 echo "Monkey Madness - stress test loop";
 echo "---------------------------";
 
+#check if device is connected
+if ! ([[ $(adb devices -l)  == *"model"* ]]); then
+   echo "No device connected, aborting..."
+   echo
+   exit
+fi
+
 #check if display is on
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); then
-   echo -n "Turn screen on and unlock device to continue..."
+   echo "Turn screen on and unlock device to continue..."
 fi
 while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); do 
    sleep 1; 
 done
 
-echo
-
 #get app package name
 app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev)
-echo "Foreground app package name: "$app
+
+#check if system package
+if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"android"* ]]); then
+   echo "App appears to be system package, open your app to continue...";
+   while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"android"* ]]); do 
+      sleep 2;     
+   done
+   sleep 3;
+   app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) 
+fi
 
 #check if launcher
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"launcher"* ]]); then
    echo -n "App appears to be launcher, are you sure you want to continue? ";
    read force;
    if [[ $force == *"n"* ]]; then
-   echo "Aborting...";
-   exit;
+      echo "Aborting...";
+      exit;
+   else
+      app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) 
    fi
 fi
+
+#echo package name of tested app
+echo "Foreground app package name: "$app
 
 #check/set number of loops
 loops=0
