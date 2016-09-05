@@ -94,7 +94,7 @@ task_id=${task_id//[!0-9]/} #strip non numeric chars from task_id
 #api specific locking
 api=$(adb shell getprop ro.build.version.sdk);
 api=${api//[!0-9]/}
-if [[ $api -eq 23 ]] ; then #android 6
+if [[ $api -ge 23 ]] ; then #android >=6
    adb shell am task lock $task_id >/dev/null 2>&1 #lock current app to prevent monkey escape
    adb shell input tap 865 1620 #ugly hardcoded tap, substitute by (x,y) of your confirm button
 elif [[ $api -eq 22 ]] ; then #android 5.1
@@ -119,7 +119,7 @@ echo "Testing..."
 adb shell monkey -p $app -s $seed --pct-syskeys 0 --pct-anyevent 0 --monitor-native-crashes $events >> ~/Desktop/$app/$logname
 
 #api specific unlocking
-if [[ $api -eq 23 ]] ; then #android 6
+if [[ $api -ge 23 ]] ; then #android 6 >=6
    adb shell am task lock stop >/dev/null 2>&1
    echo "App unlocked from screen."
 elif [[ $api -eq 22 || $api -eq 21 ]] ; then #android 5 and 5.1
