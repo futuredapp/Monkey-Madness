@@ -38,7 +38,7 @@ Example: `adb_testloop 10 5000` - will start 10 consecutive tests each with 5000
 2. Monkey is dead - log from interrupted test is saved to desktop in folder with your app's package name
  
 ##Warning
-- Monkey won't stop if you disconnect USB or kill script, you need to use `adb_killmonkey` in order to stop it.
+- Monkey won't stop if you disconnect USB or kill script process, you need to use `adb_killmonkey` in order to stop it.
 - Keep in mind that monkey is unpredictable, it can send emails, delete files or worse if you let it (if it's possible inside your app). Always use debug versions of your apps to prevent dangerous actions.
 
 ##License
