@@ -1,3 +1,5 @@
 #!/bin/bash
 adb shell ps | awk '/com\.android\.commands\.monkey/ { system("adb shell kill " $2) }' >/dev/null 2>&1
-echo "Monkey shot down!"
+echo
+echo "Monkey shot down! Your device is safe now."
+echo

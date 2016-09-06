@@ -1,5 +1,19 @@
 #!/bin/bash
 
+#catch ctrl+c and kill monkey when test in progress
+trap 'ctrlc' 2
+
+ctrlc()
+{
+if $testing; then
+   scriptlocation=$( cd $(dirname $0) ; pwd -P );
+   bash $scriptlocation/adb_killmonkey
+   exit
+else
+   exit
+fi
+}
+
 #nice intro
 echo
 echo "Monkey Madness - stress test";
@@ -124,6 +138,7 @@ echo "App locked to screen."
 
 #run test
 echo "Testing..."
+testing=true;
 adb shell monkey -p $app -s $seed --pct-syskeys 0 --pct-anyevent 0 --monitor-native-crashes $events >> ~/Desktop/$app/$logname
 
 #api specific unlocking
