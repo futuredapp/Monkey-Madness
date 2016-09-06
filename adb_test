@@ -1,13 +1,20 @@
 #!/bin/bash
 
 #catch ctrl+c and kill monkey when test in progress
-trap 'ctrlc' 2
+testing=false;
+trap 'ctrlc' 1 2 3 6 15
 
 ctrlc()
 {
 if $testing; then
-   scriptlocation=$( cd $(dirname $0) ; pwd -P );
-   bash $scriptlocation/adb_killmonkey
+   adb shell ps | awk '/com\.android\.commands\.monkey/ { system("adb shell kill " $2) }' >/dev/null 2>&1
+   echo
+   echo "Monkey shot down! Your device is safe now."
+   echo
+   if [[ $api -ge 23 ]] ; then #android >=6
+      adb shell am task lock stop >/dev/null 2>&1
+      echo "App unlocked from screen."
+   fi
    exit
 else
    exit
@@ -18,6 +25,16 @@ fi
 echo
 echo "Monkey Madness - stress test";
 echo "---------------------------";
+
+#check android api ver
+api=$(adb shell getprop ro.build.version.sdk);
+api=${api//[!0-9]/};
+if ! ([[ $api -ge 21 ]]); then
+   echo "Sorry this script supports only API 21+"
+   echo "Aborting..."
+   echo
+   exit
+fi
 
 #check if any device is connected
 if ! ([[ $(adb devices -l)  == *"model"* ]]); then
@@ -114,8 +131,6 @@ task_id=$(echo $task_id | rev) # reverse string back
 task_id=${task_id//[!0-9]/} #strip non numeric chars from task_id
 
 #api specific locking
-api=$(adb shell getprop ro.build.version.sdk);
-api=${api//[!0-9]/}
 if [[ $api -ge 23 ]] ; then #android >=6
    adb shell am task lock $task_id >/dev/null 2>&1 #lock current app to prevent monkey escape
    adb shell input tap 865 1620 #ugly hardcoded tap, substitute by (x,y) of your confirm button
@@ -127,11 +142,6 @@ elif [[ $api -eq 21 ]] ; then #android 5
    adb shell input keyevent 22
    adb shell input keyevent 22
    adb shell input keyevent 66
-else
-   echo "Sorry this script supports only API 21+"
-   echo "Aborting..."
-   echo
-   exit
 fi
 
 echo "App locked to screen."

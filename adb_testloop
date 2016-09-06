@@ -5,6 +5,16 @@ echo
 echo "Monkey Madness - stress test loop";
 echo "---------------------------";
 
+#check android api ver
+api=$(adb shell getprop ro.build.version.sdk);
+api=${api//[!0-9]/};
+if ! ([[ $api -ge 21 ]]); then
+   echo "Sorry this script supports only API 21+"
+   echo "Aborting..."
+   echo
+   exit
+fi
+
 #check if any device is connected
 if ! ([[ $(adb devices -l)  == *"model"* ]]); then
    echo "No device connected, aborting..."
