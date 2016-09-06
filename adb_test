@@ -5,12 +5,20 @@ echo
 echo "Monkey Madness - stress test";
 echo "---------------------------";
 
-#check if device is connected
+#check if any device is connected
 if ! ([[ $(adb devices -l)  == *"model"* ]]); then
    echo "No device connected, aborting..."
    echo
    exit
 fi
+
+#check if more devices connected
+if ([[ $(adb devices -l | wc -l) -gt 3 ]]); then
+   echo "More than one device detected, connect only one to continue..."
+fi
+while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do 
+   sleep 1; 
+done
 
 #check if display is on
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); then
@@ -119,7 +127,7 @@ echo "Testing..."
 adb shell monkey -p $app -s $seed --pct-syskeys 0 --pct-anyevent 0 --monitor-native-crashes $events >> ~/Desktop/$app/$logname
 
 #api specific unlocking
-if [[ $api -ge 23 ]] ; then #android 6 >=6
+if [[ $api -ge 23 ]] ; then #android >=6
    adb shell am task lock stop >/dev/null 2>&1
    echo "App unlocked from screen."
 elif [[ $api -eq 22 || $api -eq 21 ]] ; then #android 5 and 5.1
