@@ -111,10 +111,10 @@ done
 
 #show results 
 echo $loops "tests finished!"
-if [ -d $app ] ; then
-   crashcount=$(ls ~/Desktop/$app | grep CRASH | wc -l)
-   killcount=$(ls ~/Desktop/$app | grep KILLED | wc -l)
-   freezecount=$(ls ~/Desktop/$app | grep FREEZE | wc -l)
+if [ -d ~/Desktop/$app ] ; then
+   crashcount=$(ls ~/Desktop/$app | grep CRASH | wc -l);
+   freezecount=$(ls ~/Desktop/$app | grep FREEZE | wc -l);
+   killcount=$(ls ~/Desktop/$app | grep -v 'FREEZE\|CRASH' | wc -l);
    if [ $crashcount -gt 0 ] ; then echo "App crashed: "$crashcount"x"; fi
    if [ $freezecount -gt 0 ] ; then echo "App freezed: "$freezecount"x"; fi
    if [ $killcount -gt 0 ] ; then echo "Monkey killed: "$killcount"x"; fi

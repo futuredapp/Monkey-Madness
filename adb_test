@@ -203,7 +203,12 @@ elif grep -q "Events" ~/Desktop/$app/$logname ; then
 "
    echo "---------------------------" >> ~/Desktop/$app/$logname
    echo "App survived monkey madness!" >> ~/Desktop/$app/$logname
-   rm -rf ~/Desktop/$app
+   rm ~/Desktop/$app/$logname
+   if [ -d ~/Desktop/$app ] ; then
+      if [ $(ls ~/Desktop/$app | wc -l) -lt 1 ] ; then
+         rm -rf ~/Desktop/$app
+      fi
+   fi
 
 else
    echo "  ____ 
