@@ -52,10 +52,10 @@ while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do
 done
 
 #check if display is on
-if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); then
+if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"* ]]); then
    echo "Turn screen on and unlock device to continue..."
 fi
-while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); do 
+while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"*  ]]); do 
    sleep 1; 
 done
 
@@ -88,8 +88,8 @@ fi
 echo "Foreground app package name: "$app
 
 #make folder if it doesnt exist
-if ! [ -d ~/Desktop/$app ] ; then
-   mkdir ~/Desktop/$app
+if ! [ -d $PWD/$app ] ; then
+   mkdir $PWD/$app
 fi
 
 #check/set number input events
@@ -118,9 +118,9 @@ fi
 logname="$app-`date +%Y-%m-%d-%H-%M-%S`.log"
 
 #create log
-echo "Android APP stress test "$ver >> ~/Desktop/$app/$logname
-echo "Test with seed "$seed "and "$events" input events started at: `date +%Y-%m-%d-%H-%M-%S`" >> ~/Desktop/$app/$logname
-echo "---------------------------" >> ~/Desktop/$app/$logname
+echo "Android APP stress test "$ver >> $PWD/$app/$logname
+echo "Test with seed "$seed "and "$events" input events started at: `date +%Y-%m-%d-%H-%M-%S`" >> $PWD/$app/$logname
+echo "---------------------------" >> $PWD/$app/$logname
 
 
 #lock screen
@@ -149,7 +149,7 @@ echo "App locked to screen."
 #run test
 echo "Testing..."
 testing=true;
-adb shell monkey -p $app -s $seed --pct-syskeys 0 --pct-anyevent 0 --monitor-native-crashes $events >> ~/Desktop/$app/$logname
+adb shell monkey -p $app -s $seed --pct-syskeys 0 --pct-anyevent 0 --monitor-native-crashes $events >> $PWD/$app/$logname
 
 #api specific unlocking
 if [[ $api -ge 23 ]] ; then #android >=6
@@ -166,7 +166,7 @@ fi
 echo "---------------------------"
 
 #check test result
-if grep -q "CRASH" ~/Desktop/$app/$logname ; then
+if grep -q "CRASH" $PWD/$app/$logname ; then
 
    echo ' __    __
  \ \  / /
@@ -175,12 +175,12 @@ if grep -q "CRASH" ~/Desktop/$app/$logname ; then
   / /\ \ 
  /_/  \_\
 '
-   echo "---------------------------" >> ~/Desktop/$app/$logname
-   echo "App was destroyed by monkey and crashed!" >> ~/Desktop/$app/$logname
-   mv ~/Desktop/$app/$logname ~/Desktop/$app/CRASH-$logname
-   echo "Log saved to ~/Desktop/$app: CRASH-"$logname
+   echo "---------------------------" >> $PWD/$app/$logname
+   echo "App was destroyed by monkey and crashed!" >> $PWD/$app/$logname
+   mv $PWD/$app/$logname $PWD/$app/CRASH-$logname
+   echo "Log saved to $PWD/$app: CRASH-"$logname
 
-elif grep -q "RESPONDING" ~/Desktop/$app/$logname ; then
+elif grep -q "RESPONDING" $PWD/$app/$logname ; then
    echo ' __    __
  \ \  / /
   \ \/ /   
@@ -188,12 +188,12 @@ elif grep -q "RESPONDING" ~/Desktop/$app/$logname ; then
   / /\ \ 
  /_/  \_\
 '
-   echo "---------------------------" >> ~/Desktop/$app/$logname
-   echo "App was destroyed by monkey and stopped responding!" >> ~/Desktop/$app/$logname
-   mv ~/Desktop/$app/$logname ~/Desktop/$app/FREEZE-$logname
-   echo "Log saved to ~/Desktop/$app: FREEZE-"$logname
+   echo "---------------------------" >> $PWD/$app/$logname
+   echo "App was destroyed by monkey and stopped responding!" >> $PWD/$app/$logname
+   mv $PWD/$app/$logname $PWD/$app/FREEZE-$logname
+   echo "Log saved to $PWD/$app: FREEZE-"$logname
 
-elif grep -q "Events" ~/Desktop/$app/$logname ; then
+elif grep -q "Events" $PWD/$app/$logname ; then
    echo "        __
        / /
       / / 
@@ -201,12 +201,12 @@ elif grep -q "Events" ~/Desktop/$app/$logname ; then
  \ \/ /   
   \__/    
 "
-   echo "---------------------------" >> ~/Desktop/$app/$logname
-   echo "App survived monkey madness!" >> ~/Desktop/$app/$logname
-   rm ~/Desktop/$app/$logname
-   if [ -d ~/Desktop/$app ] ; then
-      if [ $(ls ~/Desktop/$app | wc -l) -lt 1 ] ; then
-         rm -rf ~/Desktop/$app
+   echo "---------------------------" >> $PWD/$app/$logname
+   echo "App survived monkey madness!" >> $PWD/$app/$logname
+   rm $PWD/$app/$logname
+   if [ -d $PWD/$app ] ; then
+      if [ $(ls $PWD/$app | wc -l) -lt 1 ] ; then
+         rm -rf $PWD/$app
       fi
    fi
 
@@ -218,10 +218,10 @@ else
   |_|
   (_)  
 "
-   echo "---------------------------" >> ~/Desktop/$app/$logname
-   echo "Monkey was killed in action!" >> ~/Desktop/$app/$logname
-   mv ~/Desktop/$app/$logname ~/Desktop/$app/KILLED-$logname
-   echo "Log saved to ~/Desktop/$app: KILLED-"$logname
+   echo "---------------------------" >> $PWD/$app/$logname
+   echo "Monkey was killed in action!" >> $PWD/$app/$logname
+   mv $PWD/$app/$logname $PWD/$app/KILLED-$logname
+   echo "Log saved to $PWD/$app: KILLED-"$logname
 fi
 echo "---------------------------"
 

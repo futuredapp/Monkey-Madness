@@ -31,10 +31,10 @@ while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do
 done
 
 #check if display is on
-if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); then
+if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"* ]]); then
    echo "Turn screen on and unlock device to continue..."
 fi
-while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* ]]); do 
+while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"* ]]); do 
    sleep 1; 
 done
 
@@ -111,16 +111,16 @@ done
 
 #show results 
 echo $loops "tests finished!"
-if [ -d ~/Desktop/$app ] ; then
-   crashcount=$(ls ~/Desktop/$app | grep CRASH | wc -l);
-   freezecount=$(ls ~/Desktop/$app | grep FREEZE | wc -l);
-   killcount=$(ls ~/Desktop/$app | grep -v 'FREEZE\|CRASH' | wc -l);
+if [ -d $PWD/$app ] ; then
+   crashcount=$(ls $PWD/$app | grep CRASH | wc -l);
+   freezecount=$(ls $PWD/$app | grep FREEZE | wc -l);
+   killcount=$(ls $PWD/$app | grep -v 'FREEZE\|CRASH' | wc -l);
    if [ $crashcount -gt 0 ] ; then echo "App crashed: "$crashcount"x"; fi
    if [ $freezecount -gt 0 ] ; then echo "App freezed: "$freezecount"x"; fi
    if [ $killcount -gt 0 ] ; then echo "Monkey killed: "$killcount"x"; fi
    loops=$((loops - crashcount - freezecount - killcount))
    echo "App survived: "$loops"x"
-   echo "Logs from failed tests are located at ~/Desktop/$app"
+   echo "Logs from failed tests are located at $PWD/$app"
    echo
 else
    echo "App survived them all!" 
