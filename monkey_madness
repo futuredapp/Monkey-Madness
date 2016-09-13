@@ -1,6 +1,7 @@
 #!/bin/bash
 
-#catch ctrl+c and kill monkey when test in progress
+############ EXIT TRAP
+
 testing=false;
 trap 'ctrlc' 1 2 3 6 15
 
@@ -21,6 +22,10 @@ else
 fi
 }
 
+############ PRE-TEST CHECKS
+
+check_device()
+{
 #nice intro
 echo
 echo "Monkey Madness - stress test";
@@ -86,7 +91,12 @@ fi
 
 #echo package name of tested app
 echo "Foreground app package name: "$app
+}
 
+############ RUN TEST
+
+run_test()
+{
 #make folder if it doesnt exist
 if ! [ -d $PWD/$app ] ; then
    mkdir $PWD/$app
@@ -111,7 +121,6 @@ if ! [ -z "$2" ]; then
 else
    seed=$RANDOM
    echo "Seed not specified! Setting random: "$seed
-   echo 'Use "adb_stresstest x y" where y>0 to set seed.' 
 fi
 
 #checks passed
@@ -121,7 +130,6 @@ logname="$app-`date +%Y-%m-%d-%H-%M-%S`.log"
 echo "Android APP stress test "$ver >> $PWD/$app/$logname
 echo "Test with seed "$seed "and "$events" input events started at: `date +%Y-%m-%d-%H-%M-%S`" >> $PWD/$app/$logname
 echo "---------------------------" >> $PWD/$app/$logname
-
 
 #lock screen
 task_id=$(adb shell dumpsys activity | grep mFocusedActivity | rev) #get focused activity info and reverse it
@@ -161,13 +169,10 @@ elif [[ $api -eq 22 || $api -eq 21 ]] ; then #android 5 and 5.1
    echo "Unlock app by holding BACK and RECENTS buttons."
 fi
 
-
-
 echo "---------------------------"
 
 #check test result
 if grep -q "CRASH" $PWD/$app/$logname ; then
-
    echo ' __    __
  \ \  / /
   \ \/ /   
@@ -224,6 +229,101 @@ else
    echo "Log saved to $PWD/$app: KILLED-"$logname
 fi
 echo "---------------------------"
+}
 
+############ TEST LOOP
 
+run_loop()
+{
+#check/set number of loops
+loops=0
+if [ -z "$1" ] || (( $1<1 )) ; then
+   until [[ $loops =~ ^-?[0-9]+$ ]] && [ $loops -gt 0 ]; do
+      echo -n "Please specify number of tests: ";
+      read loops;
+   done
+else
+   echo "Test will run $1x.";
+   loops=$1;
+fi
 
+#check/set number input events
+events=0
+if [ -z "$2" ] || (( $2<1 )); then
+   until [[ $events =~ ^-?[0-9]+$ ]] && [ $events -gt 0 ]; do
+      echo -n "Please specify number of input events: ";
+      read events;
+   done
+else
+   echo "Each test will include $2 input events.";
+   events=$2;
+fi
+
+#run loop
+for i in $(seq 1 $loops); do
+   echo "Restarting $app"
+   adb shell am force-stop $app >/dev/null 2>&1 #kill app to have fresh start
+   adb shell monkey -p $app -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1  #start app
+   #wait for $app to appear
+   sec=0;
+   until [ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == $app ] ; do 
+      ((sec++)) ; 
+      echo -ne "Waiting for launch $sec seconds..." "\r" ; 
+      sleep 1 ; 
+   done 
+   echo
+   #blaze that
+   echo "---------------------------";
+   echo "Running test #"$i
+   run_test $events
+done
+
+#show results 
+echo $loops "tests finished!"
+if [ -d $PWD/$app ] ; then
+   crashcount=$(ls $PWD/$app | grep CRASH | wc -l);
+   freezecount=$(ls $PWD/$app | grep FREEZE | wc -l);
+   killcount=$(ls $PWD/$app | grep -v 'FREEZE\|CRASH' | wc -l);
+   if [ $crashcount -gt 0 ] ; then echo "App crashed: "$crashcount"x"; fi
+   if [ $freezecount -gt 0 ] ; then echo "App freezed: "$freezecount"x"; fi
+   if [ $killcount -gt 0 ] ; then echo "Monkey killed: "$killcount"x"; fi
+   loops=$((loops - crashcount - freezecount - killcount))
+   echo "App survived: "$loops"x"
+   echo "Logs from failed tests are located at $PWD/$app"
+   echo
+else
+   echo "App survived them all!" 
+   echo  
+fi
+}
+
+############ RUNTIME
+
+##Check device
+check_device
+
+#Process arguments
+if [ $# -gt 3 ]; then
+   echo "Too much arguments, aborting..."
+   exit 1
+fi
+
+args=$1+$2+$3;
+arg1=0;
+
+for arg in "$@"; do
+   if [[ $arg =~ ^-?[0-9]+$ ]]; then
+      if [ $arg1 -gt 0 ]; then
+         arg2=$arg;
+      else
+         arg1=$arg;
+      fi
+   fi
+done
+
+#Start loop if args contain loop
+if ([[ $args == *"--loop"* || $args == *"-l"* ]]); then
+   run_loop $arg1 $arg2
+else
+   run_test $arg1 $arg2
+fi
