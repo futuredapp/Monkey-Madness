@@ -1,7 +1,7 @@
 # Monkey Madness - stress testing Android apps
 
 ##How it works
-This set of scripts starts ADB monkey in Android device shell while locking your app to fullscreen to prevent unwanted results, monkey does random events generated from seed, so you can repeat same test again if you want. When your app crashes, log with all necessary information (seed, number of events, logcat from device...) is saved to folder with your app's package name in current directory.
+This set of scripts starts ADB monkey in Android device shell while locking your app to fullscreen to prevent unwanted results, monkey does random events generated from seed, so you can repeat same test again if you want. When your app crash, log with all necessary information (seed, number of events, logcat from device...) is saved to folder with your app's package name in current directory.
 
 ##Requirements
 1. Linux or macOS with Android Debug Bridge installed
