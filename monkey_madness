@@ -93,17 +93,13 @@ fi
 echo "Foreground app package name: "$app
 
 #move old logs to old/
-echo "Checking if old logs exist."
 if [ -d $PWD/$app ] && [ $(ls $PWD/$app | grep log | wc -l) -gt 0 ]; then
-   echo "They do."
    if ! [ -d $PWD/$app/old ] ; then #make folder if it doesnt exist
-      echo "Making /old."
       mkdir $PWD/$app/old
    fi
    echo "Moving old logs to $PWD/$app/old"
    mv $PWD/$app/*.log $PWD/$app/old/ 
 fi
-
 }
 
 ############ RUN TEST
