@@ -16,9 +16,9 @@ if $testing; then
       adb shell am task lock stop >/dev/null 2>&1
       echo "App unlocked from screen."
    fi
-   exit
+   exit 2 #exit code
 else
-   exit
+   exit 2 #exit code
 fi
 }
 
@@ -31,6 +31,13 @@ echo
 echo "Monkey Madness - stress test";
 echo "---------------------------";
 
+#check if any device is connected
+if ! ([[ $(adb devices -l)  == *"model"* ]]); then
+   echo "No device connected, aborting..."
+   echo
+   exit 2 #exit code
+fi
+
 #check android api ver
 api=$(adb shell getprop ro.build.version.sdk);
 api=${api//[!0-9]/};
@@ -38,14 +45,7 @@ if ! ([[ $api -ge 21 ]]); then
    echo "Sorry this script supports only API 21+"
    echo "Aborting..."
    echo
-   exit
-fi
-
-#check if any device is connected
-if ! ([[ $(adb devices -l)  == *"model"* ]]); then
-   echo "No device connected, aborting..."
-   echo
-   exit
+   exit 2 #exit code
 fi
 
 #check if more devices connected
@@ -83,7 +83,7 @@ if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 |
    read force;
    if [[ $force == *"n"* ]]; then
       echo "Aborting...";
-      exit;
+      exit 0 #exit code 
    else
       app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) 
    fi
@@ -91,6 +91,19 @@ fi
 
 #echo package name of tested app
 echo "Foreground app package name: "$app
+
+#move old logs to old/
+echo "Checking if old logs exist."
+if [ -d $PWD/$app ] && [ $(ls $PWD/$app | grep log | wc -l) -gt 0 ]; then
+   echo "They do."
+   if ! [ -d $PWD/$app/old ] ; then #make folder if it doesnt exist
+      echo "Making /old."
+      mkdir $PWD/$app/old
+   fi
+   echo "Moving old logs to $PWD/$app/old"
+   mv $PWD/$app/*.log $PWD/$app/old/ 
+fi
+
 }
 
 ############ RUN TEST
@@ -184,6 +197,7 @@ if grep -q "CRASH" $PWD/$app/$logname ; then
    echo "App was destroyed by monkey and crashed!" >> $PWD/$app/$logname
    mv $PWD/$app/$logname $PWD/$app/CRASH-$logname
    echo "Log saved to $PWD/$app: CRASH-"$logname
+   return 1 #exit code from run_test function
 
 elif grep -q "RESPONDING" $PWD/$app/$logname ; then
    echo ' __    __
@@ -197,6 +211,7 @@ elif grep -q "RESPONDING" $PWD/$app/$logname ; then
    echo "App was destroyed by monkey and stopped responding!" >> $PWD/$app/$logname
    mv $PWD/$app/$logname $PWD/$app/FREEZE-$logname
    echo "Log saved to $PWD/$app: FREEZE-"$logname
+   return 1 #exit code from run_test function
 
 elif grep -q "Events" $PWD/$app/$logname ; then
    echo "        __
@@ -209,11 +224,12 @@ elif grep -q "Events" $PWD/$app/$logname ; then
    echo "---------------------------" >> $PWD/$app/$logname
    echo "App survived monkey madness!" >> $PWD/$app/$logname
    rm $PWD/$app/$logname
-   if [ -d $PWD/$app ] ; then
+   if [ -d $PWD/$app ] ; then #delete log directory if its empty and test passed
       if [ $(ls $PWD/$app | wc -l) -lt 1 ] ; then
          rm -rf $PWD/$app
       fi
    fi
+   return 0 #exit code from run_test function
 
 else
    echo "  ____ 
@@ -227,8 +243,10 @@ else
    echo "Monkey was killed in action!" >> $PWD/$app/$logname
    mv $PWD/$app/$logname $PWD/$app/KILLED-$logname
    echo "Log saved to $PWD/$app: KILLED-"$logname
+   return 2 #exit code from run_test function
 fi
 echo "---------------------------"
+
 }
 
 ############ TEST LOOP
@@ -280,21 +298,30 @@ done
 
 #show results 
 echo $loops "tests finished!"
-if [ -d $PWD/$app ] ; then
+if [ -d $PWD/$app ] && [ $(ls $PWD/$app | grep log | wc -l) -gt 0 ]; then
    crashcount=$(ls $PWD/$app | grep CRASH | wc -l);
    freezecount=$(ls $PWD/$app | grep FREEZE | wc -l);
-   killcount=$(ls $PWD/$app | grep -v 'FREEZE\|CRASH' | wc -l);
+   killcount=$(ls $PWD/$app | grep -v 'FREEZE\|CRASH\|old' | wc -l);
    if [ $crashcount -gt 0 ] ; then echo "App crashed: "$crashcount"x"; fi
    if [ $freezecount -gt 0 ] ; then echo "App freezed: "$freezecount"x"; fi
    if [ $killcount -gt 0 ] ; then echo "Monkey killed: "$killcount"x"; fi
-   loops=$((loops - crashcount - freezecount - killcount))
-   echo "App survived: "$loops"x"
+   survives=$((loops - crashcount - freezecount - killcount))
+   echo "App survived: "$survives"x"
    echo "Logs from failed tests are located at $PWD/$app"
    echo
 else
-   echo "App survived them all!" 
+   survives=$loops
+   echo "App survived them all!"
    echo  
 fi
+
+#exit code from run_loop function
+if [ $survives -lt $loops ]; then
+   return 1
+else
+   return 0
+fi
+
 }
 
 ############ RUNTIME

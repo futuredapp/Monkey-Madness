@@ -40,7 +40,7 @@ Example: `./monkey_madness -l 10 5000` - will start 10 consecutive tests each wi
  
 ##Warning
 - Disable Messenger notifications when you use this tool! (If you want to prevent monkey from calling to random people and sending them messages.)
-- Monkey won't stop its madness if you disconnect USB! If you do so, you need to reconnect it again and use `./kill_monkey`
+- Monkey won't stop its madness if you disconnect USB! If you do so, you need to reconnect it and use `./kill_monkey`
 - Keep in mind that monkey is unpredictable, it can send emails, delete files or worse if you let it (if it's possible inside your app). Always use debug versions of your apps to prevent dangerous actions.
 
 ##License
