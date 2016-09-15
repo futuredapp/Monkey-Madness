@@ -91,17 +91,6 @@ fi
 
 #echo package name of tested app
 echo "Foreground app package name: "$app
-#save directory
-DIRECTORY=$PWD/$app;
-
-#move old logs to old/
-if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
-   if ! [ -d $DIRECTORY/old ] ; then #make folder if it doesnt exist
-      mkdir $DIRECTORY/old
-   fi
-   echo "Moving old logs to $DIRECTORY/old"
-   mv $DIRECTORY/*.log $DIRECTORY/old/ 
-fi
 }
 
 ############ RUN TEST
@@ -185,45 +174,27 @@ elif [[ $api -eq 22 || $api -eq 21 ]] ; then #android 5 and 5.1
    echo "Unlock app by holding BACK and RECENTS buttons."
 fi
 
-echo "---------------------------"
-
 #check test result
 if grep -q "CRASH" $DIRECTORY/$logname ; then
-   echo ' __    __
- \ \  / /
-  \ \/ /   
-   |  |    App crashed, test failed!
-  / /\ \ 
- /_/  \_\
-'
+   echo 'App crashed, test FAILED!'
    echo "---------------------------" >> $DIRECTORY/$logname
    echo "App was destroyed by monkey and crashed!" >> $DIRECTORY/$logname
    mv $DIRECTORY/$logname $DIRECTORY/CRASH-$logname
    echo "Log saved to $DIRECTORY: CRASH-"$logname
+   echo "---------------------------"
    return 1 #exit code from run_test function
 
 elif grep -q "RESPONDING" $DIRECTORY/$logname ; then
-   echo ' __    __
- \ \  / /
-  \ \/ /   
-   |  |    App frozen, test failed!
-  / /\ \ 
- /_/  \_\
-'
+   echo 'App frozen, test FAILED!'
    echo "---------------------------" >> $DIRECTORY/$logname
    echo "App was destroyed by monkey and stopped responding!" >> $DIRECTORY/$logname
    mv $DIRECTORY/$logname $DIRECTORY/FREEZE-$logname
    echo "Log saved to $DIRECTORY: FREEZE-"$logname
+   echo "---------------------------"
    return 1 #exit code from run_test function
 
 elif grep -q "Events" $DIRECTORY/$logname ; then
-   echo "        __
-       / /
-      / / 
- __  / /   App survived, test passed!
- \ \/ /   
-  \__/    
-"
+   echo "App survived, test PASSED!"
    echo "---------------------------" >> $DIRECTORY/$logname
    echo "App survived monkey madness!" >> $DIRECTORY/$logname
    rm $DIRECTORY/$logname
@@ -232,24 +203,18 @@ elif grep -q "Events" $DIRECTORY/$logname ; then
          rm -rf $DIRECTORY
       fi
    fi
+   echo "---------------------------"
    return 0 #exit code from run_test function
 
 else
-   echo "  ____ 
- |__  \ 
-    ) |
-   / /     Monkey was killed in action!
-  |_|
-  (_)  
-"
+   echo "Monkey was killed in action!"
    echo "---------------------------" >> $DIRECTORY/$logname
    echo "Monkey was killed in action!" >> $DIRECTORY/$logname
    mv $DIRECTORY/$logname $DIRECTORY/KILLED-$logname
    echo "Log saved to $DIRECTORY: KILLED-"$logname
+   echo "---------------------------"
    return 2 #exit code from run_test function
 fi
-echo "---------------------------"
-
 }
 
 ############ TEST LOOP
@@ -340,6 +305,7 @@ fi
 
 args=$1+$2+$3+$4;
 arg1=0;
+DIRECTORY=$PWD/$app;
 
 for arg in "$@"; do
    if [[ $arg =~ ^-?[0-9]+$ ]]; then #Arg is number
@@ -361,6 +327,15 @@ for arg in "$@"; do
       fi
    fi
 done
+
+#move old logs to old/
+if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
+   if ! [ -d $DIRECTORY/old ] ; then #make folder if it doesnt exist
+      mkdir $DIRECTORY/old
+   fi
+   echo "Moving old logs to $DIRECTORY/old"
+   mv $DIRECTORY/*.log $DIRECTORY/old/ 
+fi
 
 #Start loop if args contain loop
 if ([[ $args == *"--loop"* || $args == *"-l"* ]]); then
