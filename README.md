@@ -14,6 +14,7 @@ This set of scripts starts ADB monkey in Android device shell while locking your
 2. Start `./monkey_madness` using terminal, you can specify optional arguments
   - argument1 - number of input events (touch, scroll, swipe...) that monkey will attempt to perform
   - argument2 - seed for generating random events (could be useful to repeat test which failed)
+  - argument3 - absolute path to directory where you want to save logs, e.g. `-d=/home/login/Desktop` or `--directory=/home/login/Desktop`
 3. Script will lock app to full screen to prevent monkey escape
 4. Monkey will furiously tap screen and try to crash your app
 5. If monkey crashed your app, crash log is saved to folder with your app's package name in current directory
@@ -25,6 +26,7 @@ Example: `./monkey_madness 5000` - will start test with 5000 events, if app cras
 2. Start `./monkey_madness -l` or `./monkey_madness --loop` using terminal, you can specify optional arguments 
   - argument2 - number of tests to perform 
   - argument3 - number of input events (touch, scroll, swipe...) that will monkey attempt to perform in each test
+  - argument4 - absolute path to directory where you want to save logs, e.g. `-d=/home/login/Desktop` or `--directory=/home/login/Desktop`
   - seeds will be random
 3. Your app will now be restarted
 4. Script will lock app to full screen to prevent monkey escape

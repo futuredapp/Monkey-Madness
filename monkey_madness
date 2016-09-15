@@ -91,14 +91,16 @@ fi
 
 #echo package name of tested app
 echo "Foreground app package name: "$app
+#save directory
+DIRECTORY=$PWD/$app;
 
 #move old logs to old/
-if [ -d $PWD/$app ] && [ $(ls $PWD/$app | grep log | wc -l) -gt 0 ]; then
-   if ! [ -d $PWD/$app/old ] ; then #make folder if it doesnt exist
-      mkdir $PWD/$app/old
+if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
+   if ! [ -d $DIRECTORY/old ] ; then #make folder if it doesnt exist
+      mkdir $DIRECTORY/old
    fi
-   echo "Moving old logs to $PWD/$app/old"
-   mv $PWD/$app/*.log $PWD/$app/old/ 
+   echo "Moving old logs to $DIRECTORY/old"
+   mv $DIRECTORY/*.log $DIRECTORY/old/ 
 fi
 }
 
@@ -107,8 +109,13 @@ fi
 run_test()
 {
 #make folder if it doesnt exist
-if ! [ -d $PWD/$app ] ; then
-   mkdir $PWD/$app
+if ! [ -d $DIRECTORY ] ; then
+   mkdir $DIRECTORY >/dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      echo 'Cannot create directory "'$DIRECTORY'"' 
+      echo 'Permission denied, aborting...' 
+      exit 1 #exit code
+   fi
 fi
 
 #check/set number input events
@@ -136,9 +143,9 @@ fi
 logname="$app-`date +%Y-%m-%d-%H-%M-%S`.log"
 
 #create log
-echo "Android APP stress test "$ver >> $PWD/$app/$logname
-echo "Test with seed "$seed "and "$events" input events started at: `date +%Y-%m-%d-%H-%M-%S`" >> $PWD/$app/$logname
-echo "---------------------------" >> $PWD/$app/$logname
+echo "Android APP stress test "$ver >> $DIRECTORY/$logname
+echo "Test with seed "$seed "and "$events" input events started at: `date +%Y-%m-%d-%H-%M-%S`" >> $DIRECTORY/$logname
+echo "---------------------------" >> $DIRECTORY/$logname
 
 #lock screen
 task_id=$(adb shell dumpsys activity | grep mFocusedActivity | rev) #get focused activity info and reverse it
@@ -166,7 +173,7 @@ echo "App locked to screen."
 #run test
 echo "Testing..."
 testing=true;
-adb shell monkey -p $app -s $seed --pct-syskeys 0 --pct-anyevent 0 --monitor-native-crashes $events >> $PWD/$app/$logname
+adb shell monkey -p $app -s $seed --pct-syskeys 0 --pct-anyevent 0 --monitor-native-crashes $events >> $DIRECTORY/$logname
 
 #api specific unlocking
 if [[ $api -ge 23 ]] ; then #android >=6
@@ -181,7 +188,7 @@ fi
 echo "---------------------------"
 
 #check test result
-if grep -q "CRASH" $PWD/$app/$logname ; then
+if grep -q "CRASH" $DIRECTORY/$logname ; then
    echo ' __    __
  \ \  / /
   \ \/ /   
@@ -189,13 +196,13 @@ if grep -q "CRASH" $PWD/$app/$logname ; then
   / /\ \ 
  /_/  \_\
 '
-   echo "---------------------------" >> $PWD/$app/$logname
-   echo "App was destroyed by monkey and crashed!" >> $PWD/$app/$logname
-   mv $PWD/$app/$logname $PWD/$app/CRASH-$logname
-   echo "Log saved to $PWD/$app: CRASH-"$logname
+   echo "---------------------------" >> $DIRECTORY/$logname
+   echo "App was destroyed by monkey and crashed!" >> $DIRECTORY/$logname
+   mv $DIRECTORY/$logname $DIRECTORY/CRASH-$logname
+   echo "Log saved to $DIRECTORY: CRASH-"$logname
    return 1 #exit code from run_test function
 
-elif grep -q "RESPONDING" $PWD/$app/$logname ; then
+elif grep -q "RESPONDING" $DIRECTORY/$logname ; then
    echo ' __    __
  \ \  / /
   \ \/ /   
@@ -203,13 +210,13 @@ elif grep -q "RESPONDING" $PWD/$app/$logname ; then
   / /\ \ 
  /_/  \_\
 '
-   echo "---------------------------" >> $PWD/$app/$logname
-   echo "App was destroyed by monkey and stopped responding!" >> $PWD/$app/$logname
-   mv $PWD/$app/$logname $PWD/$app/FREEZE-$logname
-   echo "Log saved to $PWD/$app: FREEZE-"$logname
+   echo "---------------------------" >> $DIRECTORY/$logname
+   echo "App was destroyed by monkey and stopped responding!" >> $DIRECTORY/$logname
+   mv $DIRECTORY/$logname $DIRECTORY/FREEZE-$logname
+   echo "Log saved to $DIRECTORY: FREEZE-"$logname
    return 1 #exit code from run_test function
 
-elif grep -q "Events" $PWD/$app/$logname ; then
+elif grep -q "Events" $DIRECTORY/$logname ; then
    echo "        __
        / /
       / / 
@@ -217,12 +224,12 @@ elif grep -q "Events" $PWD/$app/$logname ; then
  \ \/ /   
   \__/    
 "
-   echo "---------------------------" >> $PWD/$app/$logname
-   echo "App survived monkey madness!" >> $PWD/$app/$logname
-   rm $PWD/$app/$logname
-   if [ -d $PWD/$app ] ; then #delete log directory if its empty and test passed
-      if [ $(ls $PWD/$app | wc -l) -lt 1 ] ; then
-         rm -rf $PWD/$app
+   echo "---------------------------" >> $DIRECTORY/$logname
+   echo "App survived monkey madness!" >> $DIRECTORY/$logname
+   rm $DIRECTORY/$logname
+   if [ -d $DIRECTORY ] ; then #delete log directory if its empty and test passed
+      if [ $(ls $DIRECTORY | wc -l) -lt 1 ] ; then
+         rm -rf $DIRECTORY
       fi
    fi
    return 0 #exit code from run_test function
@@ -235,10 +242,10 @@ else
   |_|
   (_)  
 "
-   echo "---------------------------" >> $PWD/$app/$logname
-   echo "Monkey was killed in action!" >> $PWD/$app/$logname
-   mv $PWD/$app/$logname $PWD/$app/KILLED-$logname
-   echo "Log saved to $PWD/$app: KILLED-"$logname
+   echo "---------------------------" >> $DIRECTORY/$logname
+   echo "Monkey was killed in action!" >> $DIRECTORY/$logname
+   mv $DIRECTORY/$logname $DIRECTORY/KILLED-$logname
+   echo "Log saved to $DIRECTORY: KILLED-"$logname
    return 2 #exit code from run_test function
 fi
 echo "---------------------------"
@@ -294,16 +301,16 @@ done
 
 #show results 
 echo $loops "tests finished!"
-if [ -d $PWD/$app ] && [ $(ls $PWD/$app | grep log | wc -l) -gt 0 ]; then
-   crashcount=$(ls $PWD/$app | grep CRASH | wc -l);
-   freezecount=$(ls $PWD/$app | grep FREEZE | wc -l);
-   killcount=$(ls $PWD/$app | grep -v 'FREEZE\|CRASH\|old' | wc -l);
+if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
+   crashcount=$(ls $DIRECTORY | grep CRASH | wc -l);
+   freezecount=$(ls $DIRECTORY | grep FREEZE | wc -l);
+   killcount=$(ls $DIRECTORY | grep -v 'FREEZE\|CRASH\|old' | wc -l);
    if [ $crashcount -gt 0 ] ; then echo "App crashed: "$crashcount"x"; fi
    if [ $freezecount -gt 0 ] ; then echo "App freezed: "$freezecount"x"; fi
    if [ $killcount -gt 0 ] ; then echo "Monkey killed: "$killcount"x"; fi
    survives=$((loops - crashcount - freezecount - killcount))
    echo "App survived: "$survives"x"
-   echo "Logs from failed tests are located at $PWD/$app"
+   echo "Logs from failed tests are located at $DIRECTORY"
    echo
 else
    survives=$loops
@@ -326,20 +333,31 @@ fi
 check_device
 
 #Process arguments
-if [ $# -gt 3 ]; then
+if [ $# -gt 4 ]; then
    echo "Too much arguments, aborting..."
    exit 1
 fi
 
-args=$1+$2+$3;
+args=$1+$2+$3+$4;
 arg1=0;
 
 for arg in "$@"; do
-   if [[ $arg =~ ^-?[0-9]+$ ]]; then
+   if [[ $arg =~ ^-?[0-9]+$ ]]; then #Arg is number
       if [ $arg1 -gt 0 ]; then
          arg2=$arg;
       else
          arg1=$arg;
+      fi
+   else #Arg is string
+      #Args contain directory
+      if ([[ $arg == *"--directory="* || $arg == *"-d="* ]]); then
+         DIRECTORY=${arg#*=};
+         if [ -d $DIRECTORY ];then
+            DIRECTORY=$DIRECTORY"/"$app;
+         else
+            echo 'Directory "'$DIRECTORY'" does not exist! Aborting...'
+            exit 2 #exit code
+         fi
       fi
    fi
 done
