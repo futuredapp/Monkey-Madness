@@ -9,12 +9,16 @@ ctrlc()
 {
 if $testing; then
    adb shell ps | awk '/com\.android\.commands\.monkey/ { system("adb shell kill " $2) }' >/dev/null 2>&1
-   echo
-   echo "Monkey shot down! Your device is safe now."
-   echo
+   if [ "$SILENT" = false ] ; then
+      echo
+      echo "Monkey shot down! Your device is safe now."
+      echo
+   fi
    if [[ $api -ge 23 ]] ; then #android >=6
       adb shell am task lock stop >/dev/null 2>&1
-      echo "App unlocked from screen."
+      if [ "$SILENT" = false ] ; then
+         echo "App unlocked from screen."
+      fi
    fi
    exit 2 #exit code
 else
@@ -27,14 +31,18 @@ fi
 check_device()
 {
 #nice intro
-echo
-echo "Monkey Madness - stress test";
-echo "---------------------------";
+if [ "$SILENT" = false ] ; then
+   echo
+   echo "Monkey Madness - stress test";
+   echo "---------------------------";
+fi
 
 #check if any device is connected
 if ! ([[ $(adb devices -l)  == *"model"* ]]); then
-   echo "No device connected, aborting..."
-   echo
+   if [ "$SILENT" = false ] ; then
+      echo "No device connected, aborting..."
+      echo
+   fi
    exit 2 #exit code
 fi
 
@@ -42,15 +50,19 @@ fi
 api=$(adb shell getprop ro.build.version.sdk);
 api=${api//[!0-9]/};
 if ! ([[ $api -ge 21 ]]); then
-   echo "Sorry this script supports only API 21+"
-   echo "Aborting..."
-   echo
+   if [ "$SILENT" = false ] ; then
+      echo "Sorry this script supports only API 21+"
+      echo "Aborting..."
+      echo
+   fi
    exit 2 #exit code
 fi
 
 #check if more devices connected
 if ([[ $(adb devices -l | wc -l) -gt 3 ]]); then
+   if [ "$SILENT" = false ] ; then
    echo "More than one device detected, connect only one to continue..."
+   fi
 fi
 while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do 
    sleep 1; 
@@ -58,7 +70,9 @@ done
 
 #check if display is on
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"* ]]); then
-   echo "Turn screen on and unlock device to continue..."
+   if [ "$SILENT" = false ] ; then
+      echo "Turn screen on and unlock device to continue..."
+   fi
 fi
 while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"*  ]]); do 
    sleep 1; 
@@ -69,7 +83,9 @@ app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | re
 
 #check if system package
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"android"* ]]); then
-   echo "App appears to be system package, open your app to continue...";
+   if [ "$SILENT" = false ] ; then
+      echo "App appears to be system package, open your app to continue...";
+   fi
    while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"android"* ]]); do 
       sleep 2;     
    done
@@ -82,7 +98,9 @@ if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 |
    echo -n "App appears to be launcher, are you sure you want to continue? ";
    read force;
    if [[ $force == *"n"* ]]; then
-      echo "Aborting...";
+      if [ "$SILENT" = false ] ; then
+         echo "Aborting...";
+      fi
       exit 0 #exit code 
    else
       app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) 
@@ -90,7 +108,9 @@ if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 |
 fi
 
 #echo package name of tested app
-echo "Foreground app package name: "$app
+if [ "$SILENT" = false ] ; then
+   echo "Foreground app package name: "$app
+fi
 }
 
 ############ RUN TEST
@@ -101,8 +121,10 @@ run_test()
 if ! [ -d $DIRECTORY ] ; then
    mkdir $DIRECTORY >/dev/null 2>&1
    if [ $? -ne 0 ]; then
-      echo 'Cannot create directory "'$DIRECTORY'"' 
-      echo 'Permission denied, aborting...' 
+      if [ "$SILENT" = false ] ; then
+         echo 'Cannot create directory "'$DIRECTORY'"' 
+         echo 'Permission denied, aborting...' 
+      fi
       exit 1 #exit code
    fi
 fi
@@ -115,17 +137,23 @@ if [ -z "$1" ] || (( $1<1 )); then
       read events;
    done
 else
-   echo "Input events incoming: "$1;
+   if [ "$SILENT" = false ] ; then
+      echo "Input events incoming: "$1;
+   fi
    events=$1;
 fi
 
 #set seed
 if ! [ -z "$2" ]; then
-   echo "Seed set to: "$2;
+   if [ "$SILENT" = false ] ; then
+      echo "Seed set to: "$2;
+   fi
    seed=$2
 else
    seed=$RANDOM
-   echo "Seed not specified! Setting random: "$seed
+   if [ "$SILENT" = false ] ; then
+      echo "Seed not specified! Setting random: "$seed
+   fi
 fi
 
 #checks passed
@@ -157,44 +185,59 @@ elif [[ $api -eq 21 ]] ; then #android 5
    adb shell input keyevent 66
 fi
 
-echo "App locked to screen."
+if [ "$SILENT" = false ] ; then
+   echo "App locked to screen."
+fi
 
 #run test
-echo "Testing..."
+if [ "$SILENT" = false ] ; then
+   echo "Testing..."
+fi
 testing=true;
 adb shell monkey -p $app -s $seed --pct-syskeys 0 --pct-anyevent 0 --monitor-native-crashes $events >> $DIRECTORY/$logname
 
 #api specific unlocking
 if [[ $api -ge 23 ]] ; then #android >=6
    adb shell am task lock stop >/dev/null 2>&1
-   echo "App unlocked from screen."
+   if [ "$SILENT" = false ] ; then
+      echo "App unlocked from screen."
+   fi
 elif [[ $api -eq 22 || $api -eq 21 ]] ; then #android 5 and 5.1
    #NO UNLOCK FOR android<6.0
-   echo "No app unlock for API 21 and 22 for now."
-   echo "Unlock app by holding BACK and RECENTS buttons."
+   if [ "$SILENT" = false ] ; then
+      echo "No app unlock for API 21 and 22 for now."
+      echo "Unlock app by holding BACK and RECENTS buttons."
+   fi
 fi
 
 #check test result
 if grep -q "CRASH" $DIRECTORY/$logname ; then
-   echo 'App crashed, test FAILED!'
+   if [ "$SILENT" = false ] ; then
+      echo 'App crashed, test FAILED!'
+      echo "Log saved to $DIRECTORY: CRASH-"$logname
+      echo "---------------------------"
+   fi
    echo "---------------------------" >> $DIRECTORY/$logname
    echo "App was destroyed by monkey and crashed!" >> $DIRECTORY/$logname
    mv $DIRECTORY/$logname $DIRECTORY/CRASH-$logname
-   echo "Log saved to $DIRECTORY: CRASH-"$logname
-   echo "---------------------------"
    return 1 #exit code from run_test function
 
 elif grep -q "RESPONDING" $DIRECTORY/$logname ; then
-   echo 'App frozen, test FAILED!'
+   if [ "$SILENT" = false ] ; then
+      echo 'App frozen, test FAILED!'
+      echo "Log saved to $DIRECTORY: FREEZE-"$logname
+      echo "---------------------------"
+   fi
    echo "---------------------------" >> $DIRECTORY/$logname
    echo "App was destroyed by monkey and stopped responding!" >> $DIRECTORY/$logname
    mv $DIRECTORY/$logname $DIRECTORY/FREEZE-$logname
-   echo "Log saved to $DIRECTORY: FREEZE-"$logname
-   echo "---------------------------"
+
    return 1 #exit code from run_test function
 
 elif grep -q "Events" $DIRECTORY/$logname ; then
-   echo "App survived, test PASSED!"
+   if [ "$SILENT" = false ] ; then
+      echo "App survived, test PASSED!"
+   fi
    echo "---------------------------" >> $DIRECTORY/$logname
    echo "App survived monkey madness!" >> $DIRECTORY/$logname
    rm $DIRECTORY/$logname
@@ -203,16 +246,21 @@ elif grep -q "Events" $DIRECTORY/$logname ; then
          rm -rf $DIRECTORY
       fi
    fi
-   echo "---------------------------"
+   if [ "$SILENT" = false ] ; then
+      echo "---------------------------"
+   fi
    return 0 #exit code from run_test function
 
 else
-   echo "Monkey was killed in action!"
+   if [ "$SILENT" = false ] ; then
+      echo "Monkey was killed in action!"
+      echo "Log saved to $DIRECTORY: KILLED-"$logname
+      echo "---------------------------"
+   fi
    echo "---------------------------" >> $DIRECTORY/$logname
    echo "Monkey was killed in action!" >> $DIRECTORY/$logname
    mv $DIRECTORY/$logname $DIRECTORY/KILLED-$logname
-   echo "Log saved to $DIRECTORY: KILLED-"$logname
-   echo "---------------------------"
+
    return 2 #exit code from run_test function
 fi
 }
@@ -229,7 +277,9 @@ if [ -z "$1" ] || (( $1<1 )) ; then
       read loops;
    done
 else
-   echo "Test will run $1x.";
+   if [ "$SILENT" = false ] ; then
+      echo "Test will run $1x.";
+   fi
    loops=$1;
 fi
 
@@ -241,46 +291,62 @@ if [ -z "$2" ] || (( $2<1 )); then
       read events;
    done
 else
-   echo "Each test will include $2 input events.";
+   if [ "$SILENT" = false ] ; then
+      echo "Each test will include $2 input events.";
+   fi
    events=$2;
 fi
 
 #run loop
 for i in $(seq 1 $loops); do
-   echo "Restarting $app"
+   if [ "$SILENT" = false ] ; then
+      echo "Restarting $app"
+   fi
    adb shell am force-stop $app >/dev/null 2>&1 #kill app to have fresh start
    adb shell monkey -p $app -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1  #start app
    #wait for $app to appear
    sec=0;
    until [ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == $app ] ; do 
-      ((sec++)) ; 
-      echo -ne "Waiting for launch $sec seconds..." "\r" ; 
+      ((sec++)) ;
+      if [ "$SILENT" = false ] ; then
+         echo -ne "Waiting for launch $sec seconds..." "\r" ; 
+      fi
       sleep 1 ; 
-   done 
-   echo
+   done
    #blaze that
-   echo "---------------------------";
-   echo "Running test #"$i
+   if [ "$SILENT" = false ] ; then 
+      echo
+      echo "---------------------------";
+      echo "Running test #"$i
+   fi
    run_test $events
 done
 
 #show results 
-echo $loops "tests finished!"
+if [ "$SILENT" = false ] ; then 
+   echo $loops "tests finished!"
+fi
 if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
    crashcount=$(ls $DIRECTORY | grep CRASH | wc -l);
    freezecount=$(ls $DIRECTORY | grep FREEZE | wc -l);
    killcount=$(ls $DIRECTORY | grep -v 'FREEZE\|CRASH\|old' | wc -l);
-   if [ $crashcount -gt 0 ] ; then echo "App crashed: "$crashcount"x"; fi
-   if [ $freezecount -gt 0 ] ; then echo "App freezed: "$freezecount"x"; fi
-   if [ $killcount -gt 0 ] ; then echo "Monkey killed: "$killcount"x"; fi
+   if [ "$SILENT" = false ] ; then 
+      if [ $crashcount -gt 0 ] ; then echo "App crashed: "$crashcount"x"; fi
+      if [ $freezecount -gt 0 ] ; then echo "App freezed: "$freezecount"x"; fi
+      if [ $killcount -gt 0 ] ; then echo "Monkey killed: "$killcount"x"; fi
+   fi
    survives=$((loops - crashcount - freezecount - killcount))
-   echo "App survived: "$survives"x"
-   echo "Logs from failed tests are located at $DIRECTORY"
-   echo
+   if [ "$SILENT" = false ] ; then 
+      echo "App survived: "$survives"x"
+      echo "Logs from failed tests are located at $DIRECTORY"
+      echo
+   fi
 else
    survives=$loops
-   echo "App survived them all!"
-   echo  
+   if [ "$SILENT" = false ] ; then 
+      echo "App survived them all!"
+      echo  
+   fi
 fi
 
 #exit code from run_loop function
@@ -299,13 +365,16 @@ check_device
 
 #Process arguments
 if [ $# -gt 4 ]; then
-   echo "Too much arguments, aborting..."
+   if [ "$SILENT" = false ] ; then 
+      echo "Too much arguments, aborting..."
+   fi
    exit 1
 fi
 
-args=$1+$2+$3+$4;
+args=$1+$2+$3+$4+$5;
 arg1=0;
 DIRECTORY=$PWD/$app;
+SILENT=false;
 
 for arg in "$@"; do
    if [[ $arg =~ ^-?[0-9]+$ ]]; then #Arg is number
@@ -315,15 +384,20 @@ for arg in "$@"; do
          arg1=$arg;
       fi
    else #Arg is string
-      #Args contain directory
-      if ([[ $arg == *"--directory="* || $arg == *"-d="* ]]); then
+      #Arg contain directory
+      if ([[ $arg == *"--directory="* || $arg == *"d="* ]]); then
          DIRECTORY=${arg#*=};
          if [ -d $DIRECTORY ];then
             DIRECTORY=$DIRECTORY"/"$app;
          else
-            echo 'Directory "'$DIRECTORY'" does not exist! Aborting...'
+            if [ "$SILENT" = false ] ; then 
+               echo 'Directory "'$DIRECTORY'" does not exist! Aborting...'
+            fi
             exit 2 #exit code
          fi
+      #Arg contain SILENT
+      elif ([[ $arg == *"--SILENT"* || $arg == *"s"* ]]); then
+         SILENT=true;
       fi
    fi
 done
@@ -333,12 +407,14 @@ if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
    if ! [ -d $DIRECTORY/old ] ; then #make folder if it doesnt exist
       mkdir $DIRECTORY/old
    fi
-   echo "Moving old logs to $DIRECTORY/old"
+   if [ "$SILENT" = false ] ; then 
+      echo "Moving old logs to $DIRECTORY/old"
+   fi
    mv $DIRECTORY/*.log $DIRECTORY/old/ 
 fi
 
 #Start loop if args contain loop
-if ([[ $args == *"--loop"* || $args == *"-l"* ]]); then
+if ([[ $args == *"--loop"* || $args == *"l"* ]]); then
    run_loop $arg1 $arg2
 else
    run_test $arg1 $arg2
