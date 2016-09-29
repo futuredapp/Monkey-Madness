@@ -396,7 +396,7 @@ for arg in "$@"; do
             exit 2 #exit code
          fi
       #Arg contain SILENT
-      elif ([[ $arg == *"--SILENT"* || $arg == *"s"* ]]); then
+      elif ([[ $arg == *"--quiet"* || $arg == *"q"* ]]); then
          SILENT=true;
       fi
    fi
