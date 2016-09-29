@@ -60,9 +60,7 @@ fi
 
 #check if more devices connected
 if ([[ $(adb devices -l | wc -l) -gt 3 ]]); then
-   if [ "$SILENT" = false ] ; then
    echo "More than one device detected, connect only one to continue..."
-   fi
 fi
 while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do 
    sleep 1; 
@@ -70,9 +68,7 @@ done
 
 #check if display is on
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"* ]]); then
-   if [ "$SILENT" = false ] ; then
-      echo "Turn screen on and unlock device to continue..."
-   fi
+   echo "Turn screen on and unlock device to continue..."
 fi
 while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"*  ]]); do 
    sleep 1; 
@@ -83,9 +79,7 @@ app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | re
 
 #check if system package
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"android"* ]]); then
-   if [ "$SILENT" = false ] ; then
-      echo "App appears to be system package, open your app to continue...";
-   fi
+   echo "App appears to be system package, open your app to continue...";
    while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"android"* ]]); do 
       sleep 2;     
    done
