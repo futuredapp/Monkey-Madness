@@ -146,7 +146,7 @@ if ! [ -z "$2" ]; then
 else
    seed=$RANDOM
    if [ "$SILENT" = false ] ; then
-      echo "Seed not specified! Setting random: "$seed
+      echo "Setting random seed: "$seed
    fi
 fi
 
