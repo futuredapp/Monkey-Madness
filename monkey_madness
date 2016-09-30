@@ -353,6 +353,7 @@ fi
 }
 
 ############ RUNTIME
+SILENT=false;
 
 ##Check device
 check_device
@@ -368,7 +369,6 @@ fi
 args=$1+$2+$3+$4+$5;
 arg1=0;
 DIRECTORY=$PWD/$app;
-SILENT=false;
 
 for arg in "$@"; do
    if [[ $arg =~ ^-?[0-9]+$ ]]; then #Arg is number
