@@ -379,7 +379,7 @@ for arg in "$@"; do
       fi
    else #Arg is string
       #Arg contain directory
-      if ([[ $arg == *"--directory="* || $arg == *"d="* ]]); then
+      if ([[ $arg == *"--output="* || $arg == *"o="* ]]); then
          DIRECTORY=${arg#*=};
          if [ -d $DIRECTORY ];then
             DIRECTORY=$DIRECTORY"/"$app;
