@@ -5,7 +5,7 @@ This set of scripts starts ADB monkey in Android device shell while locking your
 
 ##Requirements
 1. Linux or macOS with Android Debug Bridge installed
-2. Device/emulator with Android 5.0+ and usb debugging enabled
+2. Device/emulator with Android 5.0+ and USB debugging enabled
 
 ##How to
 #####Run single test
