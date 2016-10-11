@@ -351,15 +351,7 @@ fi
 
 ############ RUNTIME
 SILENT=false;
-#nice intro
-if [ "$SILENT" = false ] ; then
-   echo
-   echo "Monkey Madness - stress test";
-   echo "---------------------------";
-fi
-
-##Check device
-check_device
+check_display
 
 #Process arguments
 if [ $# -gt 6 ]; then
@@ -370,8 +362,25 @@ if [ $# -gt 6 ]; then
 fi
 
 arg1=0;
+#get current running app
+app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev)
 DIRECTORY=$PWD/$app;
 
+#Check if arg contain QUIET
+for arg in "$@"; do
+   if ([[ $arg == *"--quiet"* || ${arg:1:1} == *"q"* ]]); then
+      SILENT=true;
+   fi
+done
+
+#nice intro
+if [ "$SILENT" = false ] ; then
+   echo
+   echo "Monkey Madness - stress test";
+   echo "---------------------------";
+fi
+
+#OTHER ARGUMENTS
 for arg in "$@"; do
    if [[ $arg =~ ^-?[0-9]+$ ]]; then #Arg is number
       if [ $arg1 -gt 0 ]; then
@@ -380,22 +389,8 @@ for arg in "$@"; do
          arg1=$arg;
       fi
    else #Arg is string
-      #Arg contain directory
-      if ([[ $arg == *"--output="* || $arg == *"o="* ]]); then
-         DIRECTORY=${arg#*=};
-         if [ -d $DIRECTORY ];then
-            DIRECTORY=$DIRECTORY"/"$app;
-         else
-            if [ "$SILENT" = false ] ; then 
-               echo 'Directory "'$DIRECTORY'" does not exist! Aborting...'
-            fi
-            exit 2 #exit code
-         fi
-      #Arg contain SILENT
-      elif ([[ $arg == *"--quiet"* || $arg == *"q"* ]]); then
-         SILENT=true;
       #Arg contain INSTALL
-      elif ([[ $arg == *"--install="* || $arg == *"i="* ]]); then
+      if ([[ $arg == *"--install="* || ${arg:1:2} == *"i="* ]]); then
          #Check if config exists
          if [ ! -f monkey_madness.conf ]; then
             if [ "$SILENT" = false ] ; then 
@@ -418,15 +413,21 @@ for arg in "$@"; do
                echo "Installing $APK"
             fi
             adb install -rtdg $APK >/dev/null 2>&1
-            check_display
             #package name from .apk
             PACKAGE_NAME=$($AAPT_PATH/aapt dump badging $APK | grep package:\ name);
             PACKAGE_NAME=$(echo $PACKAGE_NAME | sed 's/^[^'\'']*'\''//');
             PACKAGE_NAME=$(echo $PACKAGE_NAME | sed 's/'\''.*//');
-            if [ "$SILENT" = false ] ; then 
-               echo "Launching $PACKAGE_NAME"
-            fi
             adb shell monkey -p $PACKAGE_NAME -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+            #wait for $app to appear
+            sec=0;
+            until [ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == $PACKAGE_NAME ] ; do 
+               ((sec++)) ;
+               if [ "$SILENT" = false ] ; then
+                  echo -ne "Waiting for launch $sec seconds..." "\r" ; 
+               fi
+               sleep 1 ; 
+            done
+            app=$PACKAGE_NAME;
          else
             if [ "$SILENT" = false ] ; then 
                echo 'File "'$APK'" does not exist! Aborting...'
@@ -434,11 +435,26 @@ for arg in "$@"; do
             exit 2 #exit code
          fi
       #Arg contain LOOP
-      elif ([[ $arg == *"--loop"* || $arg == *"l"* ]]); then
+      elif ([[ $arg == *"--loop"* || ${arg:1:1} == *"l"* ]]); then
          LOOP=true;
+      fi
+      #Arg contain directory
+      if ([[ $arg == *"--output="* || ${arg:1:2} == *"o="* ]]); then
+         DIRECTORY=${arg#*=};
+         if [ -d $DIRECTORY ];then
+            DIRECTORY=$DIRECTORY"/"$app;
+         else
+            if [ "$SILENT" = false ] ; then 
+               echo 'Directory "'$DIRECTORY'" does not exist! Aborting...'
+            fi
+            exit 2 #exit code
+         fi  
       fi
    fi
 done
+
+##Check device
+check_device
 
 #move old logs to old/
 if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
