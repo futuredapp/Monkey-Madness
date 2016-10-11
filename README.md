@@ -14,8 +14,8 @@ This set of scripts starts ADB monkey in Android device shell while locking your
 2. Start `./monkey_madness` using terminal, you can specify optional arguments
   - argument1 - number of input events (touch, scroll, swipe...) that monkey will attempt to perform
   - argument2 - seed for generating random events (could be useful to repeat test which failed)
-  - argument3 - absolute path to directory where you want to save crash logs, for example `-o=/home/login/Desktop` or `--output=/home/login/Documents`
-  - argument4 - absolute path to .apk which you want to test, for example `-i=/home/login/Desktop/sample.apk` or `--install=/home/login/Documents/sample.apk`
+  - argument3 - absolute path to directory where you want to save crash logs, for example `--output=/home/login/Documents` or `-o=/home/login/Desktop`
+  - argument4 - absolute path to .apk file which you want to test, for example `--install=/home/login/Documents/sample.apk` or `-i=/home/login/Desktop/sample.apk`
   - argument5 - quiet output `-q` or `--quiet`
 3. Script will lock app to full screen to prevent monkey escape
 4. Monkey will furiously tap screen and try to crash your app
@@ -28,8 +28,8 @@ Example: `./monkey_madness 5000 -i=/home/login/Desktop/sample.apk` - will instal
 2. Start `./monkey_madness -l` or `./monkey_madness --loop` using terminal, you can specify optional arguments 
   - argument2 - number of tests to perform 
   - argument3 - number of input events (touch, scroll, swipe...) that will monkey attempt to perform in each test
-  - argument4 - absolute path to directory where you want to save crash logs, for example `-o=/home/login/Desktop` or `--output=/home/login/Documents`
-  - argument5 - absolute path to .apk which you want to test, for example `-i=/home/login/Desktop/sample.apk` or `--install=/home/login/Documents/sample.apk`
+  - argument4 - absolute path to directory where you want to save crash logs, for example `--output=/home/login/Documents` or `-o=/home/login/Desktop`
+  - argument5 - absolute path to .apk file which you want to test, for example `--install=/home/login/Documents/sample.apk` or `-i=/home/login/Desktop/sample.apk`
   - argument6 - quiet output `-q` or `--quiet`
   - seeds will be random
 3. Your app will now be restarted
@@ -45,7 +45,7 @@ Example: `./monkey_madness -l 10 5000 -i=/home/login/Desktop/sample.apk` - will 
 3. Monkey is dead - log from interrupted test is saved to folder with your app's package name in current directory
  
 ##Warning
-- It isn't possible to write arguments together this way `./monkey_madness -ql` for now, you must use them separately - with space between each of them like this `./monkey_madness -q -l`!
+- It isn't possible to write arguments together this way `./monkey_madness -ql` for now, you must use them separately - with space between each of them like this `./monkey_madness -q -l`.
 - Disable Messenger notifications when you use this tool! (If you want to prevent monkey from calling to random people and sending them messages.)
 - Monkey won't stop its madness if you disconnect USB! If you do so, you need to reconnect it and use `./kill_monkey`.
 - Keep in mind that monkey is unpredictable, it can send emails, delete files or worse if you let it (if it's possible inside your app). Always use debug versions of your apps to prevent dangerous actions.
