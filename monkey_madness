@@ -27,18 +27,20 @@ fi
 }
 
 ############ PRE-TEST CHECKS
+check_display()
+{
+if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"* ]]); then
+   echo "Turn screen on and unlock device to continue..."
+fi
+while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"*  ]]); do 
+   sleep 1; 
+done
+}
 
 check_device()
 {
-#nice intro
-if [ "$SILENT" = false ] ; then
-   echo
-   echo "Monkey Madness - stress test";
-   echo "---------------------------";
-fi
-
 #check if any device is connected
-if ! ([[ $(adb devices -l)  == *"model"* ]]); then
+if ! ([[ $(adb devices -l)  == *"usb"* ]]); then
    if [ "$SILENT" = false ] ; then
       echo "No device connected, aborting..."
       echo
@@ -67,12 +69,7 @@ while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do
 done
 
 #check if display is on
-if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"* ]]); then
-   echo "Turn screen on and unlock device to continue..."
-fi
-while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"*  ]]); do 
-   sleep 1; 
-done
+check_display
 
 #get app package name
 app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev)
@@ -354,22 +351,36 @@ fi
 
 ############ RUNTIME
 SILENT=false;
-
-##Check device
-check_device
+check_display
 
 #Process arguments
-if [ $# -gt 4 ]; then
+if [ $# -gt 6 ]; then
    if [ "$SILENT" = false ] ; then 
       echo "Too much arguments, aborting..."
    fi
    exit 1
 fi
 
-args=$1+$2+$3+$4+$5;
 arg1=0;
+#get current running app
+app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev)
 DIRECTORY=$PWD/$app;
 
+#Check if arg contain QUIET
+for arg in "$@"; do
+   if ([[ $arg == *"--quiet"* || ${arg:1:1} == *"q"* ]]); then
+      SILENT=true;
+   fi
+done
+
+#nice intro
+if [ "$SILENT" = false ] ; then
+   echo
+   echo "Monkey Madness - stress test";
+   echo "---------------------------";
+fi
+
+#OTHER ARGUMENTS
 for arg in "$@"; do
    if [[ $arg =~ ^-?[0-9]+$ ]]; then #Arg is number
       if [ $arg1 -gt 0 ]; then
@@ -378,8 +389,57 @@ for arg in "$@"; do
          arg1=$arg;
       fi
    else #Arg is string
+      #Arg contain INSTALL
+      if ([[ $arg == *"--install="* || ${arg:1:2} == *"i="* ]]); then
+         #Check if config exists
+         if [ ! -f monkey_madness.conf ]; then
+            if [ "$SILENT" = false ] ; then 
+               echo 'File "monkey_madness.conf" not found! Aborting...';
+            fi
+            exit 2 #exit code
+         else
+            AAPT_PATH=$(cat monkey_madness.conf | grep AAPT_PATH | sed 's/^[^=]*=//');
+         fi
+         #Check if  aapt exists
+         if [ ! -f $AAPT_PATH/aapt ]; then
+            if [ "$SILENT" = false ] ; then 
+               echo 'File "aapt" not found at "'$AAPT_PATH'"! Aborting...';
+            fi
+            exit 2 #exit code
+         fi      
+         APK=${arg#*=};
+         if [ -f $APK ];then
+            if [ "$SILENT" = false ] ; then 
+               echo "Installing $APK"
+            fi
+            adb install -rtdg $APK >/dev/null 2>&1
+            #package name from .apk
+            PACKAGE_NAME=$($AAPT_PATH/aapt dump badging $APK | grep package:\ name);
+            PACKAGE_NAME=$(echo $PACKAGE_NAME | sed 's/^[^'\'']*'\''//');
+            PACKAGE_NAME=$(echo $PACKAGE_NAME | sed 's/'\''.*//');
+            adb shell monkey -p $PACKAGE_NAME -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+            #wait for $app to appear
+            sec=0;
+            until [ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == $PACKAGE_NAME ] ; do 
+               ((sec++)) ;
+               if [ "$SILENT" = false ] ; then
+                  echo -ne "Waiting for launch $sec seconds..." "\r" ; 
+               fi
+               sleep 1 ; 
+            done
+            app=$PACKAGE_NAME;
+         else
+            if [ "$SILENT" = false ] ; then 
+               echo 'File "'$APK'" does not exist! Aborting...'
+            fi
+            exit 2 #exit code
+         fi
+      #Arg contain LOOP
+      elif ([[ $arg == *"--loop"* || ${arg:1:1} == *"l"* ]]); then
+         LOOP=true;
+      fi
       #Arg contain directory
-      if ([[ $arg == *"--output="* || $arg == *"o="* ]]); then
+      if ([[ $arg == *"--output="* || ${arg:1:2} == *"o="* ]]); then
          DIRECTORY=${arg#*=};
          if [ -d $DIRECTORY ];then
             DIRECTORY=$DIRECTORY"/"$app;
@@ -388,13 +448,13 @@ for arg in "$@"; do
                echo 'Directory "'$DIRECTORY'" does not exist! Aborting...'
             fi
             exit 2 #exit code
-         fi
-      #Arg contain SILENT
-      elif ([[ $arg == *"--quiet"* || $arg == *"q"* ]]); then
-         SILENT=true;
+         fi  
       fi
    fi
 done
+
+##Check device
+check_device
 
 #move old logs to old/
 if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
@@ -407,8 +467,8 @@ if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
    mv $DIRECTORY/*.log $DIRECTORY/old/ 
 fi
 
-#Start loop if args contain loop
-if ([[ $args == *"--loop"* || $args == *"l"* ]]); then
+#Start loop if arg contain loop
+if [ "$LOOP" = true ]; then
    run_loop $arg1 $arg2
 else
    run_test $arg1 $arg2
