@@ -12,7 +12,6 @@ if $testing; then
    if [ "$SILENT" = false ] ; then
       echo
       echo "Monkey shot down! Your device is safe now."
-      echo
    fi
    if [[ $api -ge 23 ]] ; then #android >=6
       adb shell am task lock stop >/dev/null 2>&1
@@ -291,7 +290,7 @@ fi
 #run loop
 for i in $(seq 1 $loops); do
    if [ "$SILENT" = false ] ; then
-      echo "Restarting $app"
+      echo "Restarting $app."
    fi
    adb shell am force-stop $app >/dev/null 2>&1 #kill app to have fresh start
    adb shell monkey -p $app -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1  #start app
@@ -354,19 +353,12 @@ SILENT=false;
 check_display
 
 #Process arguments
-if [ $# -gt 6 ]; then
-   if [ "$SILENT" = false ] ; then 
-      echo "Too much arguments, aborting..."
-   fi
-   exit 1
-fi
-
 arg1=0;
 #get current running app
 app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev)
 DIRECTORY=$PWD/$app;
 
-#Check if arg contain QUIET
+#Check if args contain QUIET
 for arg in "$@"; do
    if ([[ $arg == *"--quiet"* || ${arg:1:1} == *"q"* ]]); then
       SILENT=true;
@@ -413,6 +405,7 @@ for arg in "$@"; do
                echo "Installing $APK"
             fi
             adb install -rtdg $APK >/dev/null 2>&1
+            check_display
             #package name from .apk
             PACKAGE_NAME=$($AAPT_PATH/aapt dump badging $APK | grep package:\ name);
             PACKAGE_NAME=$(echo $PACKAGE_NAME | sed 's/^[^'\'']*'\''//');
@@ -427,6 +420,9 @@ for arg in "$@"; do
                fi
                sleep 1 ; 
             done
+            if [ "$SILENT" = false ] ; then
+               echo
+            fi
             app=$PACKAGE_NAME;
          else
             if [ "$SILENT" = false ] ; then 
@@ -455,6 +451,29 @@ done
 
 ##Check device
 check_device
+
+#Args contain CLEAR DATA
+for arg in "$@"; do
+   if ([[ $arg == *"--clear"* || ${arg:1:1} == *"c"* ]]); then
+      if [ "$SILENT" = false ] ; then 
+         echo "Cleared data of $app";
+      fi
+      adb shell pm clear $app >/dev/null 2>&1
+      adb shell monkey -p $app -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+      #wait for $app to appear
+      sec=0;
+      until [ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == $app ] ; do 
+         ((sec++)) ;
+         if [ "$SILENT" = false ] ; then
+            echo -ne "Waiting for launch $sec seconds..." "\r" ; 
+         fi
+         sleep 1 ; 
+      done
+      if [ "$SILENT" = false ] ; then
+         echo
+      fi
+   fi
+done
 
 #move old logs to old/
 if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
