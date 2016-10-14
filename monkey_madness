@@ -25,15 +25,40 @@ else
 fi
 }
 
+check_quiet()
+{
+#Check if args contain QUIET
+for arg in "$@"; do
+   if ([[ $arg == *"--quiet"* || ${arg:1:1} == *"q"* ]]); then
+      SILENT=true;
+   fi
+done
+}
+
 ############ PRE-TEST CHECKS
 check_display()
 {
+TRY=0;
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"* ]]); then
-   echo "Turn screen on and unlock device to continue..."
+   if [ "$SILENT" = false ] ; then
+      echo "Waking up device."
+   fi
+   adb shell input keyevent KEYCODE_POWER
+   adb shell input keyevent 82
 fi
 while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"*  ]]); do 
-   sleep 1; 
+   if [ $TRY -le 3 ]; then
+      ((TRY++));
+      adb shell input keyevent KEYCODE_POWER
+      adb shell input keyevent 82
+      sleep 1;
+   else
+      echo -ne "Unlocking failed, waiting for manual unlock...\r"
+   fi
 done
+if [ $TRY -ge 3 ]; then 
+   echo
+fi
 }
 
 check_device()
@@ -350,6 +375,14 @@ fi
 
 ############ RUNTIME
 SILENT=false;
+#check if quiet parameter is set
+check_quiet
+#nice intro
+if [ "$SILENT" = false ] ; then
+   echo
+   echo "Monkey Madness - stress test";
+   echo "---------------------------";
+fi
 check_display
 
 #Process arguments
@@ -357,20 +390,6 @@ arg1=0;
 #get current running app
 app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev)
 DIRECTORY=$PWD/$app;
-
-#Check if args contain QUIET
-for arg in "$@"; do
-   if ([[ $arg == *"--quiet"* || ${arg:1:1} == *"q"* ]]); then
-      SILENT=true;
-   fi
-done
-
-#nice intro
-if [ "$SILENT" = false ] ; then
-   echo
-   echo "Monkey Madness - stress test";
-   echo "---------------------------";
-fi
 
 #OTHER ARGUMENTS
 for arg in "$@"; do
