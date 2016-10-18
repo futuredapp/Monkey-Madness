@@ -72,6 +72,14 @@ if ! ([[ $(adb devices -l)  == *"usb"* ]]); then
    exit 2 #exit code
 fi
 
+#check if more devices connected
+if ([[ $(adb devices -l | wc -l) -gt 3 ]]); then
+   echo "More than one device detected, connect only one to continue..."
+fi
+while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do 
+   sleep 1; 
+done
+
 #check android api ver
 api=$(adb shell getprop ro.build.version.sdk);
 api=${api//[!0-9]/};
@@ -84,13 +92,7 @@ if ! ([[ $api -ge 21 ]]); then
    exit 2 #exit code
 fi
 
-#check if more devices connected
-if ([[ $(adb devices -l | wc -l) -gt 3 ]]); then
-   echo "More than one device detected, connect only one to continue..."
-fi
-while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do 
-   sleep 1; 
-done
+
 
 #check if display is on
 check_display
