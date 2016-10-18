@@ -25,16 +25,6 @@ else
 fi
 }
 
-check_quiet()
-{
-#Check if args contain QUIET
-for arg in "$@"; do
-   if ([[ $arg == *"--quiet"* || ${arg:1:1} == *"q"* ]]); then
-      SILENT=true;
-   fi
-done
-}
-
 ############ PRE-TEST CHECKS
 check_display()
 {
@@ -92,7 +82,14 @@ if ! ([[ $api -ge 21 ]]); then
    exit 2 #exit code
 fi
 
-
+#check if messenger is installed
+if ([[ $(adb shell pm list packages | grep orca | wc -l) -ge 1 ]]); then
+   if [ "$SILENT" = false ] ; then
+      echo "Messenger package detected, it is advised to turn off notifications."
+      echo -ne "Press ENTER to continue..."
+      read
+   fi
+fi
 
 #check if display is on
 check_display
@@ -112,7 +109,7 @@ fi
 
 #check if launcher
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"launcher"* ]]); then
-   echo -n "App appears to be launcher, are you sure you want to continue? ";
+   echo -n "App appears to be launcher, press ENTER to continue...";
    read force;
    if [[ $force == *"n"* ]]; then
       if [ "$SILENT" = false ] ; then
@@ -377,8 +374,14 @@ fi
 
 ############ RUNTIME
 SILENT=false;
-#check if quiet parameter is set
-check_quiet
+
+#Check if args contain QUIET
+for arg in "$@"; do
+   if ([[ $arg == *"--quiet"* || ${arg:1:1} == *"q"* ]]); then
+      SILENT=true;
+   fi
+done
+
 #nice intro
 if [ "$SILENT" = false ] ; then
    echo
