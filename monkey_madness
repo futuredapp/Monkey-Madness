@@ -26,8 +26,29 @@ fi
 }
 
 ############ PRE-TEST CHECKS
+check_device_count()
+{
+#check if any device is connected
+if ! ([[ $(adb devices -l)  == *"usb"* ]]); then
+   if [ "$SILENT" = false ] ; then
+      echo "No device connected, aborting..."
+      echo
+   fi
+   exit 2 #exit code
+fi
+
+#check if more devices connected
+if ([[ $(adb devices -l | wc -l) -gt 3 ]]); then
+   echo "More than one device detected, connect only one to continue..."
+fi
+while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do 
+   sleep 1; 
+done
+}
 check_display()
 {
+check_device_count
+
 TRY=0;
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"* ]]); then
    if [ "$SILENT" = false ] ; then
@@ -53,22 +74,7 @@ fi
 
 check_device()
 {
-#check if any device is connected
-if ! ([[ $(adb devices -l)  == *"usb"* ]]); then
-   if [ "$SILENT" = false ] ; then
-      echo "No device connected, aborting..."
-      echo
-   fi
-   exit 2 #exit code
-fi
-
-#check if more devices connected
-if ([[ $(adb devices -l | wc -l) -gt 3 ]]); then
-   echo "More than one device detected, connect only one to continue..."
-fi
-while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do 
-   sleep 1; 
-done
+check_device_count
 
 #check android api ver
 api=$(adb shell getprop ro.build.version.sdk);
