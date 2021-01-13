@@ -27,7 +27,7 @@ fi
 }
 
 android_get_devices_auth_dump(){
-  DEVICES_DUMP="$SCRIPT_LOCATION/../data/toolkit_adb_devices_dump.txt"
+  DEVICES_DUMP="$SCRIPT_LOCATION/adb_devices_dump.txt"
   rm -f $DEVICES_DUMP
   adb devices | grep -v "List" >> $DEVICES_DUMP
   if cat "$DEVICES_DUMP" | grep -q unauthorized ; then
@@ -70,8 +70,8 @@ android_check_connected
 if ([[ $(adb devices -l | wc -l) -gt 3 ]]); then
    echo "More than one device detected, connect only one to continue..."
 fi
-while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do 
-   sleep 1; 
+while ([[ $(adb devices -l | wc -l) -gt 3 ]]); do
+   sleep 1;
 done
 }
 check_display()
@@ -86,7 +86,7 @@ if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 |
    adb shell input keyevent KEYCODE_POWER
    adb shell input keyevent 82
 fi
-while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"*  ]]); do 
+while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"StatusBar}"* || $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"mCurrentFocus=null"*  ]]); do
    if [ $TRY -le 3 ]; then
       ((TRY++));
       adb shell input keyevent KEYCODE_POWER
@@ -96,7 +96,7 @@ while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f
       echo -ne "Unlocking failed, waiting for manual unlock...\r"
    fi
 done
-if [ $TRY -ge 3 ]; then 
+if [ $TRY -ge 3 ]; then
    echo
 fi
 }
@@ -135,11 +135,11 @@ app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | re
 #check if system package
 if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"android"* ]]); then
    echo "App appears to be system package, open your app to continue...";
-   while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"android"* ]]); do 
-      sleep 2;     
+   while ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == *"android"* ]]); do
+      sleep 2;
    done
    sleep 3;
-   app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) 
+   app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev)
 fi
 
 #check if launcher
@@ -150,9 +150,9 @@ if ([[ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 |
       if [ "$SILENT" = false ] ; then
          echo "Aborting...";
       fi
-      exit 0 #exit code 
+      exit 0 #exit code
    else
-      app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) 
+      app=$(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev)
    fi
 fi
 
@@ -171,8 +171,8 @@ if ! [ -d $DIRECTORY ] ; then
    mkdir $DIRECTORY >/dev/null 2>&1
    if [ $? -ne 0 ]; then
       if [ "$SILENT" = false ] ; then
-         echo 'Cannot create directory "'$DIRECTORY'"' 
-         echo 'Permission denied, aborting...' 
+         echo 'Cannot create directory "'$DIRECTORY'"'
+         echo 'Permission denied, aborting...'
       fi
       exit 1 #exit code
    fi
@@ -227,7 +227,7 @@ if [[ $api -ge 23 ]] ; then #android >=6
 elif [[ $api -eq 22 ]] ; then #android 5.1
    adb shell am lock-task $task_id >/dev/null 2>&1 #lock current app to prevent monkey escape
    adb shell input tap 865 1620 #ugly hardcoded tap, substitute by (x,y) of your confirm button
-elif [[ $api -eq 21 ]] ; then #android 5 
+elif [[ $api -eq 21 ]] ; then #android 5
    adb shell am lock-task $task_id >/dev/null 2>&1 #lock current app to prevent monkey escape
    adb shell input keyevent 22
    adb shell input keyevent 22
@@ -355,15 +355,15 @@ for i in $(seq 1 $loops); do
    adb shell monkey -p $app -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1  #start app
    #wait for $app to appear
    sec=0;
-   until [ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == $app ] ; do 
+   until [ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == $app ] ; do
       ((sec++)) ;
       if [ "$SILENT" = false ] ; then
-         echo -ne "Waiting for launch $sec seconds..." "\r" ; 
+         echo -ne "Waiting for launch $sec seconds..." "\r" ;
       fi
-      sleep 1 ; 
+      sleep 1 ;
    done
    #blaze that
-   if [ "$SILENT" = false ] ; then 
+   if [ "$SILENT" = false ] ; then
       echo
       echo "---------------------------";
       echo "Running test #"$i
@@ -371,30 +371,30 @@ for i in $(seq 1 $loops); do
    run_test $events
 done
 
-#show results 
-if [ "$SILENT" = false ] ; then 
+#show results
+if [ "$SILENT" = false ] ; then
    echo $loops "tests finished!"
 fi
 if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
    crashcount=$(ls $DIRECTORY | grep CRASH | wc -l);
    freezecount=$(ls $DIRECTORY | grep FREEZE | wc -l);
    killcount=$(ls $DIRECTORY | grep -v 'FREEZE\|CRASH\|old' | wc -l);
-   if [ "$SILENT" = false ] ; then 
+   if [ "$SILENT" = false ] ; then
       if [ $crashcount -gt 0 ] ; then echo "App crashed: "$crashcount"x"; fi
       if [ $freezecount -gt 0 ] ; then echo "App freezed: "$freezecount"x"; fi
       if [ $killcount -gt 0 ] ; then echo "Monkey killed: "$killcount"x"; fi
    fi
    survives=$((loops - crashcount - freezecount - killcount))
-   if [ "$SILENT" = false ] ; then 
+   if [ "$SILENT" = false ] ; then
       echo "App survived: "$survives"x"
       echo "Logs from failed tests are located at $DIRECTORY"
       echo
    fi
 else
    survives=$loops
-   if [ "$SILENT" = false ] ; then 
+   if [ "$SILENT" = false ] ; then
       echo "App survived them all!"
-      echo  
+      echo
    fi
 fi
 
@@ -444,7 +444,7 @@ for arg in "$@"; do
       if ([[ $arg == *"--install="* || ${arg:1:2} == *"i="* ]]); then
          #Check if config exists
          if [ ! -f monkey_madness.conf ]; then
-            if [ "$SILENT" = false ] ; then 
+            if [ "$SILENT" = false ] ; then
                echo 'File "monkey_madness.conf" not found! Aborting...';
             fi
             exit 2 #exit code
@@ -453,14 +453,14 @@ for arg in "$@"; do
          fi
          #Check if  aapt exists
          if [ ! -f $AAPT_PATH/aapt ]; then
-            if [ "$SILENT" = false ] ; then 
+            if [ "$SILENT" = false ] ; then
                echo 'File "aapt" not found at "'$AAPT_PATH'"! Aborting...';
             fi
             exit 2 #exit code
-         fi      
+         fi
          APK=${arg#*=};
          if [ -f $APK ];then
-            if [ "$SILENT" = false ] ; then 
+            if [ "$SILENT" = false ] ; then
                echo "Installing $APK"
             fi
             adb install -rtdg $APK >/dev/null 2>&1
@@ -472,19 +472,19 @@ for arg in "$@"; do
             adb shell monkey -p $PACKAGE_NAME -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
             #wait for $app to appear
             sec=0;
-            until [ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == $PACKAGE_NAME ] ; do 
+            until [ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == $PACKAGE_NAME ] ; do
                ((sec++)) ;
                if [ "$SILENT" = false ] ; then
-                  echo -ne "Waiting for launch $sec seconds..." "\r" ; 
+                  echo -ne "Waiting for launch $sec seconds..." "\r" ;
                fi
-               sleep 1 ; 
+               sleep 1 ;
             done
             if [ "$SILENT" = false ] ; then
                echo
             fi
             app=$PACKAGE_NAME;
          else
-            if [ "$SILENT" = false ] ; then 
+            if [ "$SILENT" = false ] ; then
                echo 'File "'$APK'" does not exist! Aborting...'
             fi
             exit 2 #exit code
@@ -499,11 +499,11 @@ for arg in "$@"; do
          if [ -d $DIRECTORY ];then
             DIRECTORY=$DIRECTORY"/"$app;
          else
-            if [ "$SILENT" = false ] ; then 
+            if [ "$SILENT" = false ] ; then
                echo 'Directory "'$DIRECTORY'" does not exist! Aborting...'
             fi
             exit 2 #exit code
-         fi  
+         fi
       fi
    fi
 done
@@ -514,19 +514,19 @@ check_device
 #Args contain CLEAR DATA
 for arg in "$@"; do
    if ([[ $arg == *"--clear"* || ${arg:1:1} == *"c"* ]]); then
-      if [ "$SILENT" = false ] ; then 
+      if [ "$SILENT" = false ] ; then
          echo "Cleared data of $app";
       fi
       adb shell pm clear $app >/dev/null 2>&1
       adb shell monkey -p $app -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
       #wait for $app to appear
       sec=0;
-      until [ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == $app ] ; do 
+      until [ $(adb shell dumpsys window windows | grep mCurrentFocus | cut -d'/' -f1 | rev | cut -d' ' -f1 | rev) == $app ] ; do
          ((sec++)) ;
          if [ "$SILENT" = false ] ; then
-            echo -ne "Waiting for launch $sec seconds..." "\r" ; 
+            echo -ne "Waiting for launch $sec seconds..." "\r" ;
          fi
-         sleep 1 ; 
+         sleep 1 ;
       done
       if [ "$SILENT" = false ] ; then
          echo
@@ -539,10 +539,10 @@ if [ -d $DIRECTORY ] && [ $(ls $DIRECTORY | grep log | wc -l) -gt 0 ]; then
    if ! [ -d $DIRECTORY/old ] ; then #make folder if it doesnt exist
       mkdir $DIRECTORY/old
    fi
-   if [ "$SILENT" = false ] ; then 
+   if [ "$SILENT" = false ] ; then
       echo "Moving old logs to $DIRECTORY/old"
    fi
-   mv $DIRECTORY/*.log $DIRECTORY/old/ 
+   mv $DIRECTORY/*.log $DIRECTORY/old/
 fi
 
 #Start loop if arg contain loop
