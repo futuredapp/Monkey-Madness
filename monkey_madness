@@ -2,6 +2,7 @@
 
 ############ EXIT TRAP
 
+SCRIPT_LOCATION=$(dirname "$0")
 testing=false;
 trap 'ctrlc' 1 2 3 6 15
 
@@ -25,17 +26,45 @@ else
 fi
 }
 
+android_get_devices_auth_dump(){
+  DEVICES_DUMP="$SCRIPT_LOCATION/../data/toolkit_adb_devices_dump.txt"
+  rm -f $DEVICES_DUMP
+  adb devices | grep -v "List" >> $DEVICES_DUMP
+  if cat "$DEVICES_DUMP" | grep -q unauthorized ; then
+    read -r -p $'🚨 Unauthorized Android device detected!\n🔌 Reconnect it, allow USB debugging and press ENTER...'
+    android_get_devices_auth_dump
+  fi
+  if cat "$DEVICES_DUMP" | grep -q offline ; then
+    read -r -p $'🚨 Offline Android device detected!\n🔌 Wait until the startup is complete, then press ENTER...'
+    android_get_devices_auth_dump
+  fi
+}
+
+android_get_devices(){
+  #Populate array with device ids
+  DEVICES=()
+  android_get_devices_auth_dump
+  for LINE in $(cat $DEVICES_DUMP | awk '{print $1}')
+  do
+    DEVICE=$(echo "$LINE" | awk '{print $1}')
+    DEVICES+=("$DEVICE")
+  done
+}
+
+android_check_connected(){
+  android_get_devices
+  #No device connected
+  if [ ${#DEVICES[@]} -eq 0 ]
+  then
+    echo "❌ No Android devices detected"
+    exit 1
+  fi
+}
+
 ############ PRE-TEST CHECKS
 check_device_count()
 {
-#check if any device is connected
-if ! ([[ $(adb devices -l)  == *"usb"* ]]); then
-   if [ "$SILENT" = false ] ; then
-      echo "No device connected, aborting..."
-      echo
-   fi
-   exit 2 #exit code
-fi
+android_check_connected
 
 #check if more devices connected
 if ([[ $(adb devices -l | wc -l) -gt 3 ]]); then
