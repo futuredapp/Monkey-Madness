@@ -1,4 +1,8 @@
 # Monkey Madness - stress testing Android apps
+<b>This project is deprecated, see new variant in [Mobile Toolkit](https://github.com/IntergalacticPenguin/mobile-toolkit#-atestmonkey).</b>
+
+<details>
+  <summary>Readme contents</summary>
 
 ## How it works
 This set of scripts starts ADB monkey in Android device shell while locking your app to fullscreen to prevent unwanted results, monkey does random events generated from seed, so you can repeat same test again if you want. When your app crash, log with all necessary information (seed, number of events, logcat from device...) is saved to folder with your app's package name in current directory.
@@ -75,3 +79,4 @@ Example: `./monkey_madness -l 10 5000 -i=/home/login/Desktop/sample.apk` - will 
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
+</summary>
